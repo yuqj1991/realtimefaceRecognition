@@ -93,7 +93,7 @@ struct featureCmp{
     }
 };
 typedef std::map<encodeFeature, std::string, featureCmp> mapFeature;
-
+typedef std::map<int, mapFeature> mapFaceCollectDataSet;
 
 /******************静态函数******************************/
 

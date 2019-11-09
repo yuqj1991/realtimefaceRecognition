@@ -52,15 +52,39 @@ int main(int argc, char* argv[]){
 	std::pair<float, std::string > nearestNeighbor = searchNearestNeighbor(goal, kdtree);
 	endTime = clock();//计时结束
 	std::cout << "kd tree run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
-    std::cout<<"person: "<<nearestNeighbor.second<<std::endl;
+    std::cout<<"the kd method result: "<<nearestNeighbor.second<<std::endl;
 	startTime = clock();//计时开始
 	std::pair<float, std::string>nearestNeighbor_loop= serachCollectDataNameByloop(dataColletcion,
              															detFeature, gender);
 	std::string person = nearestNeighbor_loop.second;
-	std::cout<<person<<std::endl;
+	std::cout<<"the loop method result: "<<person<<std::endl;
 	endTime = clock();//计时结束
 	std::cout << "for recusive run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
 /****************测试循环获取和第一种kd二叉树获取方式中时间节省方式**********************/
+/****************测试循环获取和第三种map红黑二叉树获取方式中时间节省方式******************/
+#if 1
+    mapFaceCollectDataSet dataTestSet;
+    for(int i = 0; i < dataColletcion.size(); i++){
+        vector_feature feature = dataColletcion[i];
+        mapFeature subfeature;
+        for(int j = 0; j < feature.size(); j++){
+            subfeature.insert(std::make_pair(feature[j].second, feature[j].first));
+        }
+        int gender = i ;
+        dataTestSet[i] = subfeature;
+    }
+    startTime = clock();//计时开始
+    if(dataTestSet.find(gender)!=dataTestSet.end()){
+        mapFeature subSet = dataTestSet.find(gender)->second;
+        if(subSet.find(detFeature)!=subSet.end()){
+            person = subSet.find(detFeature)->second;
+        }
+    }
+    endTime = clock();//计时结束
+	std::cout << "map method run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
+    std::cout<<"the third method result: "<<person<<std::endl;
+#endif
+/****************测试循环获取和第三种map红黑二叉树获取方式中时间节省方式******************/
 #else
 /****************测试循环获取和第二种kd二叉树获取方式中时间节省方式**********************/
     using dataset = vector<pair<Point<512>, std::string >>;
@@ -106,6 +130,7 @@ int main(int argc, char* argv[]){
 	std::cout << "for recusive run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
 /****************测试循环获取和第二种kd二叉树获取方式中时间节省方式**********************/
 #endif
+
 }
 
 #if 0
