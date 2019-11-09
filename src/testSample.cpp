@@ -26,9 +26,9 @@ int main(int argc, char* argv[]){
 #else
 	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(facefeaturefile);
 #endif
-#if 0
+#if 1
 /****************测试循环获取和第一种kd二叉树获取方式中时间节省方式**********************/
-	std::vector<std::vector<float> > trainData;
+	std::vector<std::pair<std::vector<float>, std::string > > trainData;
 	std::vector<float> goal;
 	encodeFeature detFeature;
 	int gender = 0;
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]){
 		vector_feature feature = dataColletcion[i];
 		for(int j = 0; j < feature.size(); j++){
 			if(feature[j].first!="1156174130")
-				trainData.push_back(feature[j].second.featureFace);
+				trainData.push_back(std::make_pair(feature[j].second.featureFace, feature[j].first));
 			else{
 				goal = feature[j].second.featureFace;
 				gender = i;
@@ -49,15 +49,10 @@ int main(int argc, char* argv[]){
 	buildKdtree(kdtree, trainData);
 	clock_t startTime,endTime;
  	startTime = clock();//计时开始
-	vector<float> nearestNeighbor = searchNearestNeighbor(goal, kdtree);
+	std::pair<float, std::string > nearestNeighbor = searchNearestNeighbor(goal, kdtree);
 	endTime = clock();//计时结束
 	std::cout << "kd tree run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
-	#if 0
-	for(int i =0; i< 512; i++){
-		std::cout<<nearestNeighbor[i]<<" ";
-	}
-	std::cout<<std::endl;
-	#endif
+    std::cout<<"person: "<<nearestNeighbor.second<<std::endl;
 	startTime = clock();//计时开始
 	std::string person;
 	float maxDist = 0.f, comDist = 0.f;

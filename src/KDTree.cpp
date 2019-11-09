@@ -160,7 +160,8 @@ ElemType& KDTree<N, ElemType>::operator[](const kdPoint<N>& pt) {
 }
 
 template <std::size_t N, typename ElemType>
-void KDTree<N, ElemType>::nearestNeighborRecurse(const typename KDTree<N, ElemType>::Node* currNode, const kdPoint<N>& key, BoundedPQueue<ElemType>& pQueue) const {
+void KDTree<N, ElemType>::nearestNeighborRecurse(const typename KDTree<N, ElemType>::Node* currNode, 
+                        const kdPoint<N>& key, BoundedPQueue<ElemType>& pQueue) const {
     if (currNode == NULL) return;
     const kdPoint<N>& currkdPoint = currNode->kdPoint;
 
@@ -187,7 +188,7 @@ void KDTree<N, ElemType>::nearestNeighborRecurse(const typename KDTree<N, ElemTy
 
 template <std::size_t N, typename ElemType>
 ElemType KDTree<N, ElemType>::kNNValue(const kdPoint<N>& key, std::size_t k) const {
-    BoundedPQueue<ElemType> pQueue(k); // BPQ with maximum size k
+    BoundedPQueue<ElemType> pQueue(k);
     if (empty()) return ElemType(); // default return value if KD-tree is empty
 
     // Recursively search the KD-tree with pruning
@@ -199,7 +200,6 @@ ElemType KDTree<N, ElemType>::kNNValue(const kdPoint<N>& key, std::size_t k) con
         ++counter[pQueue.dequeueMin()];
     }
 
-    // Return the most frequent element in the kNN set
     ElemType result;
     int cnt = -1;
     for (const auto &p : counter) {

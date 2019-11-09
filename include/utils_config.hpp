@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <assert.h>
 const float cosValueThresold = 0.65f;
-const float euclideanValueThresold = 0.25f;
+const float euclideanValueThresold = 1.2f;
 
 typedef struct modelParameter_{
     std::string m_model_weight_;
@@ -47,7 +47,7 @@ struct featureCmp{
         }
     }
 };
-//typedef std::map<encodeFeature, std::string, featureCmp> mapFeature;
+typedef std::map<encodeFeature, std::string, featureCmp> mapFeature;
 typedef std::vector<std::pair<std::string, encodeFeature > >vector_feature;
 typedef std::map<int,  vector_feature> FaceBase;
 
@@ -143,16 +143,25 @@ static float computeDistance(const std::vector<float> leftValue, const std::vect
     
 }
 
-static std::string getCollectDataName(dataBase dataColletcion, std::vector<float>feature){
-    std::string person;
-    for(int i = 0; i < dataColletcion.size(); i++){
-		vector_feature feature = dataColletcion[i];
-		for(int j = 0; j < feature.size(); j++){
-			if(computeDistance(feature, feature[j].second.featureFace, 0)==0)
-                person = feature[j].first;
-		}
-	}
-    return person;
+static std::pair<float, std::string>serachCollectDataNameByloop(FaceBase dataColletcion,
+             encodeFeature feature, int gender){
+    std::pair<float, std::string> result;
+    float maxDist = 0.f, comDist = 0.f;
+    if(dataColletcion.find(gender)!=dataColletcion.end()){
+        vector_feature subFaceDataSet = dataColletcion.find(gender)->second;
+        for(int nn = 0; nn<subFaceDataSet.size(); nn++){
+            comDist = compareDistance(feature, subFaceDataSet[nn].second);
+            printf("nn: %d, cosDis: %f, dataset name: %s\n", nn, comDist, subFaceDataSet[nn].first.c_str());
+            if(maxDist < comDist){
+                result.second = subFaceDataSet[nn].first;
+                result.first = comDist;
+            }
+        }  
+    }else{
+        result.second = "unknown one";
+        result.first = 0.f;
+    }
+    return result;
 }
 
 /******************初始化网络模型*************************/

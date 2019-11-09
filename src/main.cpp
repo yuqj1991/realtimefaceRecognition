@@ -26,12 +26,12 @@ int main(int argc, char* argv[]){
 	baseface.generateBaseFeature(faceInfernece);
 #else
 	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(facefeaturefile);
-	std::vector<std::vector<float> > trainData;
+	std::vector<std::pair<std::vector<float>, std::string > > trainData;
 	std::vector<float>goal;
 	for(int i = 0; i < dataColletcion.size(); i++){
 		vector_feature feature = dataColletcion[i];
 		for(int j = 0; j < feature.size(); j++){
-			trainData.push_back(feature[j].second.featureFace);		
+			trainData.push_back(std::make_pair(feature[j].second.featureFace, feature[j].first));		
 		}
 	}
 	KDtreeNode *kdtree = new KDtreeNode;
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]){
 			resutTrack.clear();
 			std::vector<faceAnalysisResult> result= faceInfernece.faceInference(frame, 32, 20.0f);
 			string person = "unknown man";
-			float maxDist = 0.f, comDist = 0.f;
+			
 			for(int ii = 0; ii < result.size(); ii++){
 				if(result[ii].haveFeature){
 					/*
@@ -74,25 +74,18 @@ int main(int argc, char* argv[]){
 					trackBoxInfo.detBox.ymax = ymax;
 					resutTrack.push_back(trackBoxInfo);//获取跟踪信息
 					*/ 
-					#if 0
+					#if 1 //loop
 					encodeFeature detFeature = result[ii].faceFeature;
-					if(dataColletcion.find(result[ii].faceAttri.gender)!=dataColletcion.end()){
-						vector_feature subFaceDataSet = dataColletcion.find(result[ii].faceAttri.gender)->second;
-						for(int nn = 0; nn<subFaceDataSet.size(); nn++){
-							comDist = compareDistance(detFeature, subFaceDataSet[nn].second);
-							printf("nn: %d, cosDis: %f, dataset name: %s\n", nn, comDist, subFaceDataSet[nn].first.c_str());
-							if(maxDist < comDist){
-								person = subFaceDataSet[nn].first;
-								maxDist = comDist;
-							}
-						}
-					}
+					std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
+             															detFeature, result[ii].faceAttri.gender);
+					person = nearestNeighbor.second;
 					#else
 					goal = result[ii].faceFeature.featureFace;
-					vector<float> nearestNeighbor = searchNearestNeighbor(goal, kdtree);
-					person = getCollectDataName(dataColletcion, goal);
+					std::pair<std::vector<float>, std::string > nearestNeighbor = searchNearestNeighbor(goal, kdtree);
+					person = nearestNeighbor.second;
+
 					#endif
-					if(maxDist < cosValueThresold){
+					if(nearestNeighbor.first < cosValueThresold){
 						person = "unknown man";
 					}
 				}

@@ -21,27 +21,27 @@ inline float computeVariance(std::vector<float> Dimfeature){
     return variance;
 }
 /****************计算每个维度的中度值*******************/
-inline float computeMedianValue(std::vector<std::vector<float> > points, int featureIdx){
+inline float computeMedianValue(std::vector<std::pair<std::vector<float>, std::string > > points, int featureIdx){
     std::vector<float>dimfeature;
     int nrof_samples = points.size(); 
     for(int i = 0; i < nrof_samples; i++){
-        dimfeature.push_back(points[i][featureIdx]);
+        dimfeature.push_back(points[i].first[featureIdx]);
     }
     std::sort(dimfeature.begin(), dimfeature.end());
     int pos = dimfeature.size() /2 ;
     return dimfeature[pos];
 }
 /****************计算样本中每个维度的方差值***************/
-inline int choose_feature(std::vector<std::vector<float> > points){
+inline int choose_feature(std::vector<std::pair<std::vector<float>, std::string > > points){
     int nrof_samples = points.size(); 
-    int N = points[0].size();
+    int N = points[0].first.size();
     std::vector<float> dimfeature;
     float variance_max = 0.f;
     int featureidx = 0;
     for(int i = 0; i < N; i++){
         dimfeature.clear();
         for(int j = 0; j < nrof_samples; j++)
-            dimfeature.push_back(points[j][i]);
+            dimfeature.push_back(points[j].first[i]);
         float variance = computeVariance(dimfeature);
         if(variance_max < variance){
             variance_max = variance;
@@ -52,7 +52,7 @@ inline int choose_feature(std::vector<std::vector<float> > points){
 }
 
 struct KDtreeNode{
-    vector<float> root;
+    std::pair<std::vector<float>, std::string > root;
     KDtreeNode* parent;
     KDtreeNode* leftChild;
     KDtreeNode* rightChild;
@@ -63,12 +63,12 @@ struct KDtreeNode{
     //判断kd树是否为空
     bool isEmpty()
     {
-        return root.empty();
+        return root.first.empty();
     }
     //判断kd树是否只是一个叶子结点
     bool isLeaf()
     {
-        return (!root.empty()) && 
+        return (!root.first.empty()) && 
             rightChild == NULL && leftChild == NULL;
     }
     //判断是否是树的根结点
@@ -88,7 +88,7 @@ struct KDtreeNode{
     }
 };
 
-void buildKdtree(KDtreeNode* tree, std::vector<std::vector<float> > points){
+void buildKdtree(KDtreeNode* tree, std::vector<std::pair<std::vector<float>, std::string > > points){
     //样本的数量
     unsigned samplesNum = points.size();
     //终止条件
@@ -107,15 +107,15 @@ void buildKdtree(KDtreeNode* tree, std::vector<std::vector<float> > points){
     std::cout<<"split dim: "<<splitAttribute<<" splitValue: "<<splitValue<<std::endl;
     std::vector<float> splitAttributeValues;
     for(unsigned i = 0; i<samplesNum; i++ )
-        splitAttributeValues.push_back(points[i][splitAttribute]);
+        splitAttributeValues.push_back(points[i].first[splitAttribute]);
     
     /*******根据选定的切分属性和切分值，将数据集分为两个子集**/
-    vector<vector<float> > subset_left;
-    vector<vector<float> > subset_right;
+    std::vector<std::pair<std::vector<float>, std::string > > subset_left;
+    std::vector<std::pair<std::vector<float>, std::string > > subset_right;
     tree->splitDim = splitAttribute;
     tree->splitvalue = splitValue;
     for (unsigned i = 0; i < samplesNum; ++i){
-        if (splitAttributeValues[i] == splitValue && tree->root.empty())
+        if (splitAttributeValues[i] == splitValue && tree->root.first.empty())
             tree->root = points[i];
         else{
             if (splitAttributeValues[i] < splitValue)
@@ -134,20 +134,20 @@ void buildKdtree(KDtreeNode* tree, std::vector<std::vector<float> > points){
     buildKdtree(tree->rightChild, subset_right);
 }
 
-std::vector<float> searchNearestNeighbor(std::vector<float> goal, KDtreeNode *tree)
- {
+std::pair<float, std::string > searchNearestNeighbor(std::vector<float> goal, KDtreeNode *tree)
+{
     /*第一步：在kd树中找出包含目标点的叶子结点：从根结点出发，
     递归的向下访问kd树，若目标点的当前维的坐标小于切分点的
     坐标，则移动到左子结点，否则移动到右子结点，直到子结点为
     叶结点为止,以此叶子结点为“当前最近点”*/
 
-    unsigned k = tree->root.size();//计算出数据的维数
+    unsigned k = tree->root.first.size();//计算出数据的维数
     KDtreeNode* currentTree = tree;
-    std::vector<float> currentNearest = currentTree->root;
+    std::pair<std::vector<float>, std::string > currentNearest = currentTree->root;
     while(!currentTree->isLeaf())
     {
         unsigned index = currentTree->splitvalue;//计算当前维
-        if (currentTree->rightChild->isEmpty() || goal[index] < currentNearest[index]){
+        if (currentTree->rightChild->isEmpty() || goal[index] < currentNearest.first[index]){
             currentTree = currentTree->leftChild;
         }else{
             currentTree = currentTree->rightChild;
@@ -164,7 +164,7 @@ std::vector<float> searchNearestNeighbor(std::vector<float> goal, KDtreeNode *tr
     近邻搜索；如果不相交，向上回退*/
 
     //当前最近邻与目标点的距离
-    float currentDistance = computeDistance(goal, currentNearest, 0);
+    float currentDistance = computeDistance(goal, currentNearest.first, 0);
 
     //如果当前子kd树的根结点是其父结点的左孩子，则搜索其父结点的右孩子结点所代表的区域，反之亦反
     KDtreeNode* searchDistrict;
@@ -181,12 +181,12 @@ std::vector<float> searchNearestNeighbor(std::vector<float> goal, KDtreeNode *tr
     //如果搜索区域对应的子kd树的根结点不是整个kd树的根结点，继续回退搜索
     while (searchDistrict->parent != NULL){
         //搜索区域与目标点的最近距离
-        float districtDistance = abs(goal[searchDistrict->splitvalue] - searchDistrict->parent->root[searchDistrict->splitvalue]);
+        float districtDistance = abs(goal[searchDistrict->splitvalue] - searchDistrict->parent->root.first[searchDistrict->splitvalue]);
         std::cout<<"districtDistance: "<<districtDistance<<std::endl;
         //如果“搜索区域与目标点的最近距离”比“当前最近邻与目标点的距离”短，表明搜索区域内可能存在距离目标点更近的点
         if (districtDistance < currentDistance ){//&& !searchDistrict->isEmpty()
 
-            float parentDistance = computeDistance(goal, searchDistrict->parent->root, 0);
+            float parentDistance = computeDistance(goal, searchDistrict->parent->root.first, 0);
             std::cout<<"parentDistance: "<<parentDistance<<std::endl;
             if (parentDistance < currentDistance){
                 currentDistance = parentDistance;
@@ -194,7 +194,7 @@ std::vector<float> searchNearestNeighbor(std::vector<float> goal, KDtreeNode *tr
                 currentNearest = currentTree->root;
             }
             if (!searchDistrict->isEmpty()){
-                float rootDistance = computeDistance(goal, searchDistrict->root, 0);
+                float rootDistance = computeDistance(goal, searchDistrict->root.first, 0);
                 std::cout<<"rootDistance: "<<rootDistance<<std::endl;
                 if (rootDistance < currentDistance)
                 {
@@ -204,7 +204,7 @@ std::vector<float> searchNearestNeighbor(std::vector<float> goal, KDtreeNode *tr
                 }
             }
             if (searchDistrict->leftChild != NULL && !searchDistrict->leftChild->isEmpty()){
-                float leftDistance = computeDistance(goal, searchDistrict->leftChild->root, 0);
+                float leftDistance = computeDistance(goal, searchDistrict->leftChild->root.first, 0);
                 std::cout<<"leftDistance: "<<leftDistance<<std::endl;
                 if (leftDistance < currentDistance)
                 {
@@ -214,7 +214,7 @@ std::vector<float> searchNearestNeighbor(std::vector<float> goal, KDtreeNode *tr
                 }
             }
             if (searchDistrict->rightChild != NULL && !searchDistrict->rightChild->isEmpty()){
-                float rightDistance = computeDistance(goal, searchDistrict->rightChild->root, 0);
+                float rightDistance = computeDistance(goal, searchDistrict->rightChild->root.first, 0);
                 std::cout<<"rightDistance: "<<rightDistance<<std::endl;
                 if (rightDistance < currentDistance){
                     currentDistance = rightDistance;
@@ -234,8 +234,10 @@ std::vector<float> searchNearestNeighbor(std::vector<float> goal, KDtreeNode *tr
             searchDistrict = searchDistrict->parent;
         }
     }
-    return currentNearest;
+    std::pair<float, std::string> result;
+    result.first = currentDistance;
+    result.second = currentNearest.second;
+    return result;
 }
-
 
 #endif
