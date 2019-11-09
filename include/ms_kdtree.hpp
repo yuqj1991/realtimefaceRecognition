@@ -100,9 +100,9 @@ void buildKdtree(KDtreeNode* tree, std::vector<std::pair<Prediction, std::string
         return;
     }
     std::cout<< "samplesNum: "<<samplesNum<<std::endl;
-    //选择切分属性
+    //选择切分属性,某一维
     unsigned int splitAttribute = choose_feature(points);
-    //选择切分值
+    //选择切分值，中值
     float splitValue = computeMedianValue(points, splitAttribute);
     std::cout<<"split dim: "<<splitAttribute<<" splitValue: "<<splitValue<<std::endl;
     Prediction splitAttributeValues;
@@ -146,7 +146,7 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
     std::pair<Prediction, std::string > currentNearest = currentTree->root;
     while(!currentTree->isLeaf())
     {
-        unsigned index = currentTree->splitvalue;//计算当前维
+        unsigned index = currentTree->splitDim;//计算当前维
         if (currentTree->rightChild->isEmpty() || goal[index] < currentNearest.first[index]){
             currentTree = currentTree->leftChild;
         }else{
@@ -181,7 +181,7 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
     //如果搜索区域对应的子kd树的根结点不是整个kd树的根结点，继续回退搜索
     while (searchDistrict->parent != NULL){
         //搜索区域与目标点的最近距离
-        float districtDistance = abs(goal[searchDistrict->splitvalue] - searchDistrict->parent->root.first[searchDistrict->splitvalue]);
+        float districtDistance = abs(goal[searchDistrict->splitDim] - searchDistrict->parent->root.first[searchDistrict->splitDim]);
         std::cout<<"districtDistance: "<<districtDistance<<std::endl;
         //如果“搜索区域与目标点的最近距离”比“当前最近邻与目标点的距离”短，表明搜索区域内可能存在距离目标点更近的点
         if (districtDistance < currentDistance ){//&& !searchDistrict->isEmpty()
