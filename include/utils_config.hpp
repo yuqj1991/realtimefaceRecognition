@@ -80,7 +80,6 @@ struct featureCmp{
         
         float cosValue = (float) (top/(sqrt(bottomLeft)*sqrt(bottomRight)));
         float Euclidean = std::sqrt(EuclideanValue);
-        printf("EuclideanValue: %f, cosValue: %f\n", Euclidean, cosValue);
         if(cosValue > cosValueThresold && Euclidean < euclideanValueThresold){
             return false;
         }else{
@@ -139,6 +138,7 @@ static std::pair<float, std::string>serachCollectDataNameByloop(FaceBase dataCol
             if(maxDist < comDist){
                 result.second = subFaceDataSet[nn].first;
                 result.first = comDist;
+                maxDist = comDist;
             }
         }  
     }else{
