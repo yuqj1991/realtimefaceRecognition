@@ -28,8 +28,8 @@ int main(int argc, char* argv[]){
 #endif
 #if 1
 /****************测试循环获取和第一种kd二叉树获取方式中时间节省方式**********************/
-	std::vector<std::pair<std::vector<float>, std::string > > trainData;
-	std::vector<float> goal;
+	std::vector<std::pair<Prediction, std::string > > trainData;
+	Prediction goal;
 	encodeFeature detFeature;
 	int gender = 0;
 	for(int i = 0; i < dataColletcion.size(); i++){
@@ -54,18 +54,9 @@ int main(int argc, char* argv[]){
 	std::cout << "kd tree run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
     std::cout<<"person: "<<nearestNeighbor.second<<std::endl;
 	startTime = clock();//计时开始
-	std::string person;
-	float maxDist = 0.f, comDist = 0.f;
-	if(dataColletcion.find(gender)!=dataColletcion.end()){
-		vector_feature subFaceDataSet = dataColletcion.find(gender)->second;
-		for(int nn = 0; nn<subFaceDataSet.size(); nn++){
-			comDist = compareDistance(detFeature, subFaceDataSet[nn].second);
-			if(maxDist < comDist){
-				person = subFaceDataSet[nn].first;
-				maxDist = comDist;
-			}
-		}
-	}
+	std::pair<float, std::string>nearestNeighbor_loop= serachCollectDataNameByloop(dataColletcion,
+             															detFeature, gender);
+	std::string person = nearestNeighbor_loop.second;
 	std::cout<<person<<std::endl;
 	endTime = clock();//计时结束
 	std::cout << "for recusive run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
@@ -107,18 +98,9 @@ int main(int argc, char* argv[]){
 	std::cout<<std::endl;
 	#endif
 	startTime = clock();//计时开始
-	std::string person;
-	float maxDist = 0.f, comDist = 0.f;
-	if(dataColletcion.find(gender)!=dataColletcion.end()){
-		vector_feature subFaceDataSet = dataColletcion.find(gender)->second;
-		for(int nn = 0; nn<subFaceDataSet.size(); nn++){
-			comDist = compareDistance(detFeature, subFaceDataSet[nn].second);
-			if(maxDist < comDist){
-				person = subFaceDataSet[nn].first;
-				maxDist = comDist;
-			}
-		}
-	}
+	std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
+             															detFeature, gender);
+	std::string person = nearestNeighbor.second;
 	std::cout<<person<<std::endl;
 	endTime = clock();//计时结束
 	std::cout << "for recusive run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;

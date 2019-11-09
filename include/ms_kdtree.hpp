@@ -9,7 +9,7 @@
 using namespace std;
 
 /****************计算维度的标准方差*********************/
-inline float computeVariance(std::vector<float> Dimfeature){
+inline float computeVariance(Prediction Dimfeature){
     float mean = 0.f, variance = 0.f;
     for(int i = 0; i < Dimfeature.size(); i++){
         mean += Dimfeature[i];
@@ -21,8 +21,8 @@ inline float computeVariance(std::vector<float> Dimfeature){
     return variance;
 }
 /****************计算每个维度的中度值*******************/
-inline float computeMedianValue(std::vector<std::pair<std::vector<float>, std::string > > points, int featureIdx){
-    std::vector<float>dimfeature;
+inline float computeMedianValue(std::vector<std::pair<Prediction, std::string > > points, int featureIdx){
+    Prediction dimfeature;
     int nrof_samples = points.size(); 
     for(int i = 0; i < nrof_samples; i++){
         dimfeature.push_back(points[i].first[featureIdx]);
@@ -32,10 +32,10 @@ inline float computeMedianValue(std::vector<std::pair<std::vector<float>, std::s
     return dimfeature[pos];
 }
 /****************计算样本中每个维度的方差值***************/
-inline int choose_feature(std::vector<std::pair<std::vector<float>, std::string > > points){
+inline int choose_feature(std::vector<std::pair<Prediction, std::string > > points){
     int nrof_samples = points.size(); 
     int N = points[0].first.size();
-    std::vector<float> dimfeature;
+    Prediction dimfeature;
     float variance_max = 0.f;
     int featureidx = 0;
     for(int i = 0; i < N; i++){
@@ -52,7 +52,7 @@ inline int choose_feature(std::vector<std::pair<std::vector<float>, std::string 
 }
 
 struct KDtreeNode{
-    std::pair<std::vector<float>, std::string > root;
+    std::pair<Prediction, std::string > root;
     KDtreeNode* parent;
     KDtreeNode* leftChild;
     KDtreeNode* rightChild;
@@ -88,7 +88,7 @@ struct KDtreeNode{
     }
 };
 
-void buildKdtree(KDtreeNode* tree, std::vector<std::pair<std::vector<float>, std::string > > points){
+void buildKdtree(KDtreeNode* tree, std::vector<std::pair<Prediction, std::string > > points){
     //样本的数量
     unsigned samplesNum = points.size();
     //终止条件
@@ -105,13 +105,13 @@ void buildKdtree(KDtreeNode* tree, std::vector<std::pair<std::vector<float>, std
     //选择切分值
     float splitValue = computeMedianValue(points, splitAttribute);
     std::cout<<"split dim: "<<splitAttribute<<" splitValue: "<<splitValue<<std::endl;
-    std::vector<float> splitAttributeValues;
+    Prediction splitAttributeValues;
     for(unsigned i = 0; i<samplesNum; i++ )
         splitAttributeValues.push_back(points[i].first[splitAttribute]);
     
     /*******根据选定的切分属性和切分值，将数据集分为两个子集**/
-    std::vector<std::pair<std::vector<float>, std::string > > subset_left;
-    std::vector<std::pair<std::vector<float>, std::string > > subset_right;
+    std::vector<std::pair<Prediction, std::string > > subset_left;
+    std::vector<std::pair<Prediction, std::string > > subset_right;
     tree->splitDim = splitAttribute;
     tree->splitvalue = splitValue;
     for (unsigned i = 0; i < samplesNum; ++i){
@@ -134,7 +134,7 @@ void buildKdtree(KDtreeNode* tree, std::vector<std::pair<std::vector<float>, std
     buildKdtree(tree->rightChild, subset_right);
 }
 
-std::pair<float, std::string > searchNearestNeighbor(std::vector<float> goal, KDtreeNode *tree)
+std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode *tree)
 {
     /*第一步：在kd树中找出包含目标点的叶子结点：从根结点出发，
     递归的向下访问kd树，若目标点的当前维的坐标小于切分点的
@@ -143,7 +143,7 @@ std::pair<float, std::string > searchNearestNeighbor(std::vector<float> goal, KD
 
     unsigned k = tree->root.first.size();//计算出数据的维数
     KDtreeNode* currentTree = tree;
-    std::pair<std::vector<float>, std::string > currentNearest = currentTree->root;
+    std::pair<Prediction, std::string > currentNearest = currentTree->root;
     while(!currentTree->isLeaf())
     {
         unsigned index = currentTree->splitvalue;//计算当前维

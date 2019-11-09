@@ -16,9 +16,54 @@ typedef struct modelParameter_{
     float m_mean_value_[3];
 }modelParameter;
 
+typedef std::vector<float> Prediction;
 struct encodeFeature{
-        std::vector<float> featureFace;
+        Prediction featureFace;
 };
+
+typedef std::vector<std::pair<std::string, encodeFeature > >vector_feature;
+typedef std::map<int,  vector_feature> FaceBase;
+
+typedef struct resideo_point_{
+    int point_x;
+    int point_y;
+}point;
+
+typedef struct Angle_{
+    float yaw;
+    float pitch;
+    float roll;
+}angle;
+
+typedef struct faceAttri_{
+    int gender;
+    std::vector<point> landmarks;
+    angle facepose;
+}faceattribute;
+
+
+typedef struct Box_{
+    int xmin;
+    int ymin;
+    int xmax;
+    int ymax;
+}box;
+typedef std::pair<float, box> output;
+
+typedef struct _faceAnalysis_result{
+    box faceBox;
+    faceattribute faceAttri;
+    encodeFeature faceFeature;
+    bool haveFeature;
+} faceAnalysisResult;
+
+typedef struct detBoxInfo_{
+	box detBox;
+	std::string name;
+}detBoxInfo;
+
+typedef std::vector<detBoxInfo> RecognResultTrack;
+/*******************************第三种方式map存储********************************/
 struct featureCmp{
     bool operator()(const encodeFeature &leftValue, const encodeFeature &rightValue) const{
         float top =0.0f, bottomLeft=0.0f, bottomRight=0.0f, EuclideanValue = 0.0f;
@@ -48,72 +93,11 @@ struct featureCmp{
     }
 };
 typedef std::map<encodeFeature, std::string, featureCmp> mapFeature;
-typedef std::vector<std::pair<std::string, encodeFeature > >vector_feature;
-typedef std::map<int,  vector_feature> FaceBase;
-
-typedef struct resideo_point_{
-    int point_x;
-    int point_y;
-}point;
-
-typedef struct Angle_{
-    float yaw;
-    float pitch;
-    float roll;
-}angle;
-
-typedef struct faceAttri_{
-    int gender;
-    std::vector<point> landmarks;
-    angle facepose;
-}faceattribute;
-
-
-typedef struct Box_{
-    int xmin;
-    int ymin;
-    int xmax;
-    int ymax;
-}box;
-typedef std::pair<float, box> output;
-typedef std::vector<float> Prediction;
-
-typedef struct _faceAnalysis_result{
-    box faceBox;
-    faceattribute faceAttri;
-    encodeFeature faceFeature;
-    bool haveFeature;
-} faceAnalysisResult;
-
-typedef struct detBoxInfo_{
-	box detBox;
-	std::string name;
-}detBoxInfo;
-
-typedef std::vector<detBoxInfo> RecognResultTrack;
 
 
 /******************静态函数******************************/
-static float compareDistance(const encodeFeature &leftValue, const encodeFeature &rightValue){
-    float top =0.0f, bottomLeft=0.0f, bottomRight=0.0f, euclideanValue = 0.0f;
 
-    assert(leftValue.featureFace.size()==rightValue.featureFace.size());
-    assert(leftValue.featureFace.size() == 512);
-
-    for(int ii = 0; ii < 512; ii++){
-        top += leftValue.featureFace[ii]*rightValue.featureFace[ii];
-        bottomLeft += leftValue.featureFace[ii]*leftValue.featureFace[ii];
-        bottomRight += rightValue.featureFace[ii]*rightValue.featureFace[ii];
-        euclideanValue += std::pow((leftValue.featureFace[ii]-rightValue.featureFace[ii]),2);
-    }
-    
-    float cosValue = (float) (top/(sqrt(bottomLeft)*sqrt(bottomRight)));
-    float Euclidean = std::sqrt(euclideanValue);
-    printf("euclideanValue: %f, cosValue: %f\n", Euclidean, cosValue);
-    return cosValue;
-}
-
-static float computeDistance(const std::vector<float> leftValue, const std::vector<float> &rightValue, 
+static float computeDistance(const Prediction leftValue, const Prediction &rightValue, 
                                 unsigned int method){
     float top =0.0f, bottomLeft=0.0f, bottomRight=0.0f, euclideanValue = 0.0f;
 
@@ -150,7 +134,7 @@ static std::pair<float, std::string>serachCollectDataNameByloop(FaceBase dataCol
     if(dataColletcion.find(gender)!=dataColletcion.end()){
         vector_feature subFaceDataSet = dataColletcion.find(gender)->second;
         for(int nn = 0; nn<subFaceDataSet.size(); nn++){
-            comDist = compareDistance(feature, subFaceDataSet[nn].second);
+            comDist = computeDistance(feature.featureFace, subFaceDataSet[nn].second.featureFace, 1);
             printf("nn: %d, cosDis: %f, dataset name: %s\n", nn, comDist, subFaceDataSet[nn].first.c_str());
             if(maxDist < comDist){
                 result.second = subFaceDataSet[nn].first;

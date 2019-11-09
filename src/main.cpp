@@ -26,8 +26,8 @@ int main(int argc, char* argv[]){
 	baseface.generateBaseFeature(faceInfernece);
 #else
 	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(facefeaturefile);
-	std::vector<std::pair<std::vector<float>, std::string > > trainData;
-	std::vector<float>goal;
+	std::vector<std::pair<Prediction, std::string > > trainData;
+	Prediction goal;
 	for(int i = 0; i < dataColletcion.size(); i++){
 		vector_feature feature = dataColletcion[i];
 		for(int j = 0; j < feature.size(); j++){
@@ -81,9 +81,8 @@ int main(int argc, char* argv[]){
 					person = nearestNeighbor.second;
 					#else
 					goal = result[ii].faceFeature.featureFace;
-					std::pair<std::vector<float>, std::string > nearestNeighbor = searchNearestNeighbor(goal, kdtree);
+					std::pair<float, std::string > nearestNeighbor = searchNearestNeighbor(goal, kdtree);
 					person = nearestNeighbor.second;
-
 					#endif
 					if(nearestNeighbor.first < cosValueThresold){
 						person = "unknown man";
