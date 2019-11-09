@@ -18,7 +18,7 @@ typedef struct modelParameter_{
 
 typedef std::vector<float> Prediction;
 struct encodeFeature{
-        Prediction featureFace;
+    Prediction featureFace;
 };
 
 typedef std::vector<std::pair<std::string, encodeFeature > >vector_feature;
@@ -148,6 +148,21 @@ static std::pair<float, std::string>serachCollectDataNameByloop(FaceBase dataCol
     return result;
 }
 
+static std::string serachCollectDataNameBymapSet(mapFaceCollectDataSet dataTestSet,
+             encodeFeature detFeature, int gender){
+    std::string result;
+    if(dataTestSet.find(gender)!=dataTestSet.end()){
+        mapFeature subSet = dataTestSet.find(gender)->second;
+        if(subSet.find(detFeature)!=subSet.end()){
+            result = subSet.find(detFeature)->second;
+        }else{
+            result = "unknown person";
+        }
+    }else{
+        result = "unknown person";
+    }
+    return result;
+}
 /******************初始化网络模型*************************/
 
 static std::string faceDir = "../faceBase";

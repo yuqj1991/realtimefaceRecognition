@@ -63,23 +63,27 @@ int main(int argc, char* argv[]){
 /****************测试循环获取和第一种kd二叉树获取方式中时间节省方式**********************/
 /****************测试循环获取和第三种map红黑二叉树获取方式中时间节省方式******************/
 #if 1
-    mapFaceCollectDataSet dataTestSet;
-    for(int i = 0; i < dataColletcion.size(); i++){
-        vector_feature feature = dataColletcion[i];
+	mapFaceCollectDataSet dataTestSet;
+	FaceBase::iterator it;
+    for(it = dataColletcion.begin(); it != dataColletcion.end(); it++){
+        vector_feature feature = it->second;
         mapFeature subfeature;
         for(int j = 0; j < feature.size(); j++){
             subfeature.insert(std::make_pair(feature[j].second, feature[j].first));
         }
-        int gender = i ;
-        dataTestSet[i] = subfeature;
+        int gender = it->first;
+        dataTestSet[gender] = subfeature;
     }
+    int num = 0;
+    mapFaceCollectDataSet::iterator iter;
+    for(iter = dataTestSet.begin(); iter != dataTestSet.end(); iter++){
+        mapFeature subfeature = iter->second;
+        num += subfeature.size();
+    }
+    std::cout<<"num: "<<num<<std::endl;
     startTime = clock();//计时开始
-    if(dataTestSet.find(gender)!=dataTestSet.end()){
-        mapFeature subSet = dataTestSet.find(gender)->second;
-        if(subSet.find(detFeature)!=subSet.end()){
-            person = subSet.find(detFeature)->second;
-        }
-    }
+    person = serachCollectDataNameBymapSet(dataTestSet,
+             detFeature, gender);
     endTime = clock();//计时结束
 	std::cout << "map method run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
     std::cout<<"the third method result: "<<person<<std::endl;

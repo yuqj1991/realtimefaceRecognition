@@ -27,7 +27,6 @@ int main(int argc, char* argv[]){
 #else
 	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(facefeaturefile);
 	std::vector<std::pair<Prediction, std::string > > trainData;
-	Prediction goal;
 	for(int i = 0; i < dataColletcion.size(); i++){
 		vector_feature feature = dataColletcion[i];
 		for(int j = 0; j < feature.size(); j++){
@@ -37,6 +36,18 @@ int main(int argc, char* argv[]){
 	KDtreeNode *kdtree = new KDtreeNode;
 	buildKdtree(kdtree, trainData);
 #endif
+	mapFaceCollectDataSet dataTestSet;
+	FaceBase::iterator it;
+    for(it = dataColletcion.begin(); it != dataColletcion.end(); it++){
+        vector_feature feature = it->second;
+        mapFeature subfeature;
+        for(int j = 0; j < feature.size(); j++){
+            subfeature.insert(std::make_pair(feature[j].second, feature[j].first));
+        }
+        int gender = it->first;
+        dataTestSet[gender] = subfeature;
+    }
+
 #if 1
     /**********************初始化跟踪******************/
 	KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
@@ -74,19 +85,23 @@ int main(int argc, char* argv[]){
 					trackBoxInfo.detBox.ymax = ymax;
 					resutTrack.push_back(trackBoxInfo);//获取跟踪信息
 					*/ 
-					#if 1 //loop
 					encodeFeature detFeature = result[ii].faceFeature;
+					#if 1
+					#if 0 //loop
+					
 					std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
              															detFeature, result[ii].faceAttri.gender);
 					person = nearestNeighbor.second;
 					#else
-					goal = result[ii].faceFeature.featureFace;
-					std::pair<float, std::string > nearestNeighbor = searchNearestNeighbor(goal, kdtree);
+					std::pair<float, std::string > nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, kdtree);
 					person = nearestNeighbor.second;
 					#endif
 					if(nearestNeighbor.first < cosValueThresold){
 						person = "unknown man";
 					}
+					#else
+					person = serachCollectDataNameBymapSet(dataTestSet, detFeature, result[ii].faceAttri.gender);
+					#endif
 				}
 				box detBox = result[ii].faceBox;
                 cv::rectangle( frame, cv::Point( detBox.xmin, detBox.ymin ), 
