@@ -131,16 +131,28 @@ static float computeDistance(const std::vector<float> leftValue, const std::vect
     float Euclidean = std::sqrt(euclideanValue);
     switch (method)
     {
-    case 0: //cosDistance
+    case 0: //euclideanDistance
         return Euclidean;
         break;
-    case 1:
+    case 1: //cosDistance
         return cosValue;
         break;
     default:
         break;
     }
     
+}
+
+static std::string getCollectDataName(dataBase dataColletcion, std::vector<float>feature){
+    std::string person;
+    for(int i = 0; i < dataColletcion.size(); i++){
+		vector_feature feature = dataColletcion[i];
+		for(int j = 0; j < feature.size(); j++){
+			if(computeDistance(feature, feature[j].second.featureFace, 0)==0)
+                person = feature[j].first;
+		}
+	}
+    return person;
 }
 
 /******************初始化网络模型*************************/

@@ -11,7 +11,7 @@
 #include "utils_config.hpp"
 #include "dataBase.hpp"
 #include "ms_kdtree.hpp"
-
+#include "kdtree.hpp"
 #include<ctime>
 
 using namespace cv;
@@ -77,25 +77,29 @@ int main(int argc, char* argv[]){
 /****************测试循环获取和第一种kd二叉树获取方式中时间节省方式**********************/
 #else
 /****************测试循环获取和第二种kd二叉树获取方式中时间节省方式**********************/
-std::vector<std::vector<float> > trainData;
-	std::vector<float> goal;
-	encodeFeature detFeature;
-	int gender = 0;
-	for(int i = 0; i < dataColletcion.size(); i++){
-		vector_feature feature = dataColletcion[i];
-		for(int j = 0; j < feature.size(); j++){
-			if(feature[j].first!="1156174130")
-				trainData.push_back(feature[j].second.featureFace);
-			else{
-				goal = feature[j].second.featureFace;
-				gender = i;
-				detFeature = feature[j].second;
-			}
-			
-		}
-	}
-	KDtreeNode *kdtree = new KDtreeNode;
-	buildKdtree(kdtree, trainData);
+    using dataset = vector<pair<Point<512>, std::string >>;
+   dataset trainData;
+    kdPoint<512> keypoint;
+    void transformData(FaceBase rawData, dataset& data, kdPoint<512>* testpoint) {
+        for (int idx = 0; idx < rawData.size(); idx++) {
+            vector_feature feature = dataColletcion[i];
+            std::vector<double> tmp;
+            for(int j = 0; j < feature.size(); j++){
+                tmp.clear();
+                if(feature[j].first!="1156174130"){
+                    tmp = feature[j].second.featureFace;
+                    kdPoint<512> newPoint;
+                    copy(tmp.begin(), tmp.end(), newPoint.begin());
+                    data.push_back(make_pair(newPoint, feature[j].first));
+                }else{
+                    tmp = feature[j].second.featureFace;
+                    copy(tmp.begin(), tmp.end(), testpoint->begin());
+                }
+            } 
+        }
+    }
+    transformData(dataColletcion, trainData, &keypoint);
+    KDTree<512, float> kd(trainData);
 	clock_t startTime,endTime;
  	startTime = clock();//计时开始
 	vector<float> nearestNeighbor = searchNearestNeighbor(goal, kdtree);
@@ -145,21 +149,6 @@ static void kNNQueryThread(int start, int end, const KDTree<784, unsigned int>& 
         if (pred == p.second) ++correctCount;
         if (numQueriesProcessed % 500 == 0) cout << numQueriesProcessed << endl;
         queryLock.unlock();
-    }
-}
-
-// Transform loaded data to the format that KDTree constructor accepts
-void transformData(mnist_data* rawData, unsigned int cnt, dataset& data) {
-    for (int idx = 0; idx < cnt; idx++) {
-        std::vector<double> tmp;
-        for (int i = 0; i < 28; i++) {
-            for (int j = 0; j < 28; j++) {
-                tmp.push_back(rawData[idx].data[i][j]);
-            }
-        }
-        Point<784> newPoint;
-        copy(tmp.begin(), tmp.end(), newPoint.begin());
-        data.push_back(make_pair(newPoint, rawData[idx].label));
     }
 }
 

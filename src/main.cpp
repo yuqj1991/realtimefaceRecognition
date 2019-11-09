@@ -11,6 +11,7 @@
 #include "utils_config.hpp"
 #include "dataBase.hpp"
 #include "ms_kdtree.hpp"
+#include "kdtree.hpp"
 
 #include<ctime>
 
@@ -25,6 +26,16 @@ int main(int argc, char* argv[]){
 	baseface.generateBaseFeature(faceInfernece);
 #else
 	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(facefeaturefile);
+	std::vector<std::vector<float> > trainData;
+	std::vector<float>goal;
+	for(int i = 0; i < dataColletcion.size(); i++){
+		vector_feature feature = dataColletcion[i];
+		for(int j = 0; j < feature.size(); j++){
+			trainData.push_back(feature[j].second.featureFace);		
+		}
+	}
+	KDtreeNode *kdtree = new KDtreeNode;
+	buildKdtree(kdtree, trainData);
 #endif
 #if 1
     /**********************初始化跟踪******************/
@@ -63,6 +74,7 @@ int main(int argc, char* argv[]){
 					trackBoxInfo.detBox.ymax = ymax;
 					resutTrack.push_back(trackBoxInfo);//获取跟踪信息
 					*/ 
+					#if 0
 					encodeFeature detFeature = result[ii].faceFeature;
 					if(dataColletcion.find(result[ii].faceAttri.gender)!=dataColletcion.end()){
 						vector_feature subFaceDataSet = dataColletcion.find(result[ii].faceAttri.gender)->second;
@@ -75,6 +87,11 @@ int main(int argc, char* argv[]){
 							}
 						}
 					}
+					#else
+					goal = result[ii].faceFeature.featureFace;
+					vector<float> nearestNeighbor = searchNearestNeighbor(goal, kdtree);
+					person = getCollectDataName(dataColletcion, goal);
+					#endif
 					if(maxDist < cosValueThresold){
 						person = "unknown man";
 					}
