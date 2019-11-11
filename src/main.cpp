@@ -86,7 +86,7 @@ int main(int argc, char* argv[]){
 					resutTrack.push_back(trackBoxInfo);//获取跟踪信息
 					*/ 
 					encodeFeature detFeature = result[ii].faceFeature;
-					#if 1
+					#if 0
 					#if 0 //loop
 					
 					std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
