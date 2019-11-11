@@ -196,4 +196,35 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
     return result;
 }
 
+void printKdTree(KDtreeNode *tree, unsigned depth)
+{
+    for (unsigned i = 0; i < depth; ++i)
+    cout << "\t";
+            
+    for (vector<double>::size_type j = 0; j < tree->root.size(); ++j)
+        cout << tree->root[j] << ",";
+    cout << endl;
+    if (tree->leftChild == NULL && tree->rightChild == NULL )//叶子节点
+        return;
+    else //非叶子节点
+    {
+        if (tree->leftChild != NULL)
+        {
+            for (unsigned i = 0; i < depth + 1; ++i)
+                cout << "\t";
+            cout << " left:";
+            printKdTree(tree->leftChild, depth + 1);
+        }    
+        cout << endl;
+        if (tree->rightChild != NULL)
+        {
+            for (unsigned i = 0; i < depth + 1; ++i)
+                cout << "\t";
+            cout << "right:";
+            printKdTree(tree->rightChild, depth + 1);
+        }
+        cout << endl;
+    }
+}
+
 #endif
