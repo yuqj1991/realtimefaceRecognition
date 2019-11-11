@@ -24,16 +24,16 @@ namespace RESIDEO{
                 std::cout << "file =" << __FILE__ << ", line =" << __LINE__ << ", faceDetect result more than one: "
                                         <<result.size()<<" image name: "<<filenames[i]<<std::endl;
             }else{
-                #if 0
+                std::string tempString = filenames[i].substr(filenames[i].find_last_of("/")+1);
+                std::string RegisterName = tempString.substr(0, tempString.find_last_of("."));
+                #if 1
                 box detBox = result[0].faceBox;
                 cv::rectangle( image, cv::Point( detBox.xmin, detBox.ymin ), 
 											cv::Point( detBox.xmax, detBox.ymax), 
 															cv::Scalar( 0, 255, 255 ), 1, 8 );
-                cv::imshow("result", image);
-                cv::waitKey(0);
+                cv::imwrite(cropfaceDir + tempString, image);
                 #endif
-                std::string tempString = filenames[i].substr(filenames[i].find_last_of("/")+1);
-                std::string RegisterName = tempString.substr(0, tempString.find_last_of("."));
+                
                 if(result[0].haveFeature){
                     outfile << RegisterName;
                     outfile << " "<<result[0].faceAttri.gender<<" ";
