@@ -8,48 +8,6 @@
 #include "utils_config.hpp"
 using namespace std;
 
-/****************计算维度的标准方差*********************/
-inline float computeVariance(Prediction Dimfeature){
-    float mean = 0.f, variance = 0.f;
-    for(int i = 0; i < Dimfeature.size(); i++){
-        mean += Dimfeature[i];
-        variance += std::pow((Dimfeature[i]), 2.0);
-    }
-    mean *= float(1 / Dimfeature.size());
-    variance *= float(1 / Dimfeature.size());
-    variance = variance - std::pow(mean, 2.0);
-    return variance;
-}
-/****************计算每个维度的中度值*******************/
-inline float computeMedianValue(std::vector<std::pair<Prediction, std::string > > points, int featureIdx){
-    Prediction dimfeature;
-    int nrof_samples = points.size(); 
-    for(int i = 0; i < nrof_samples; i++){
-        dimfeature.push_back(points[i].first[featureIdx]);
-    }
-    std::sort(dimfeature.begin(), dimfeature.end());
-    int pos = dimfeature.size() /2 ;
-    return dimfeature[pos];
-}
-/****************计算样本中每个维度的方差值***************/
-inline int choose_feature(std::vector<std::pair<Prediction, std::string > > points){
-    int nrof_samples = points.size(); 
-    int N = points[0].first.size();
-    Prediction dimfeature;
-    float variance_max = 0.f;
-    int featureidx = 0;
-    for(int i = 0; i < N; i++){
-        dimfeature.clear();
-        for(int j = 0; j < nrof_samples; j++)
-            dimfeature.push_back(points[j].first[i]);
-        float variance = computeVariance(dimfeature);
-        if(variance_max < variance){
-            variance_max = variance;
-            featureidx = i;
-        }
-    }
-    return featureidx;
-}
 
 struct KDtreeNode{
     std::pair<Prediction, std::string > root;
@@ -99,12 +57,10 @@ void buildKdtree(KDtreeNode* tree, std::vector<std::pair<Prediction, std::string
         tree->root = points[0];
         return;
     }
-    std::cout<< "samplesNum: "<<samplesNum<<std::endl;
-    //选择切分属性
+    //选择切分属性,某一维
     unsigned int splitAttribute = choose_feature(points);
-    //选择切分值
+    //选择切分值，中值
     float splitValue = computeMedianValue(points, splitAttribute);
-    std::cout<<"split dim: "<<splitAttribute<<" splitValue: "<<splitValue<<std::endl;
     Prediction splitAttributeValues;
     for(unsigned i = 0; i<samplesNum; i++ )
         splitAttributeValues.push_back(points[i].first[splitAttribute]);
@@ -124,7 +80,6 @@ void buildKdtree(KDtreeNode* tree, std::vector<std::pair<Prediction, std::string
                 subset_right.push_back(points[i]);
         }
     }
-    std::cout<<"subset_left size: "<<subset_left.size()<<" subset_right size: "<<subset_right.size()<<std::endl;
     /*******子集递归调用buildKDtreeNode函数*****************/
     tree->leftChild = new KDtreeNode;
     tree->leftChild->parent = tree;
@@ -146,7 +101,7 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
     std::pair<Prediction, std::string > currentNearest = currentTree->root;
     while(!currentTree->isLeaf())
     {
-        unsigned index = currentTree->splitvalue;//计算当前维
+        unsigned index = currentTree->splitDim;//计算当前维
         if (currentTree->rightChild->isEmpty() || goal[index] < currentNearest.first[index]){
             currentTree = currentTree->leftChild;
         }else{
@@ -165,7 +120,7 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
 
     //当前最近邻与目标点的距离
     float currentDistance = computeDistance(goal, currentNearest.first, 0);
-
+    std::cout<<"raw currentDistance: "<<currentDistance<<" "<<currentNearest.second<<std::endl;
     //如果当前子kd树的根结点是其父结点的左孩子，则搜索其父结点的右孩子结点所代表的区域，反之亦反
     KDtreeNode* searchDistrict;
     if (currentTree->isLeft())
@@ -181,7 +136,7 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
     //如果搜索区域对应的子kd树的根结点不是整个kd树的根结点，继续回退搜索
     while (searchDistrict->parent != NULL){
         //搜索区域与目标点的最近距离
-        float districtDistance = abs(goal[searchDistrict->splitvalue] - searchDistrict->parent->root.first[searchDistrict->splitvalue]);
+        float districtDistance = abs(goal[searchDistrict->splitDim] - searchDistrict->parent->root.first[searchDistrict->splitDim]);
         std::cout<<"districtDistance: "<<districtDistance<<std::endl;
         //如果“搜索区域与目标点的最近距离”比“当前最近邻与目标点的距离”短，表明搜索区域内可能存在距离目标点更近的点
         if (districtDistance < currentDistance ){//&& !searchDistrict->isEmpty()
@@ -195,7 +150,7 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
             }
             if (!searchDistrict->isEmpty()){
                 float rootDistance = computeDistance(goal, searchDistrict->root.first, 0);
-                std::cout<<"rootDistance: "<<rootDistance<<std::endl;
+                std::cout<<"rootDistance: "<<rootDistance<<" "<<searchDistrict->root.second<<std::endl;
                 if (rootDistance < currentDistance)
                 {
                     currentDistance = rootDistance;
@@ -205,7 +160,7 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
             }
             if (searchDistrict->leftChild != NULL && !searchDistrict->leftChild->isEmpty()){
                 float leftDistance = computeDistance(goal, searchDistrict->leftChild->root.first, 0);
-                std::cout<<"leftDistance: "<<leftDistance<<std::endl;
+                std::cout<<"leftDistance: "<<leftDistance<<" "<<searchDistrict->leftChild->root.second<<std::endl;
                 if (leftDistance < currentDistance)
                 {
                     currentDistance = leftDistance;
@@ -215,14 +170,14 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
             }
             if (searchDistrict->rightChild != NULL && !searchDistrict->rightChild->isEmpty()){
                 float rightDistance = computeDistance(goal, searchDistrict->rightChild->root.first, 0);
-                std::cout<<"rightDistance: "<<rightDistance<<std::endl;
+                std::cout<<"rightDistance: "<<rightDistance<<" "<<searchDistrict->rightChild->root.second<<std::endl;
                 if (rightDistance < currentDistance){
                     currentDistance = rightDistance;
                     currentTree = searchDistrict;
                     currentNearest = currentTree->root;
                 }
             }
-            std::cout<<"currentDistance: "<<currentDistance<<std::endl;
+            std::cout<<"**********loop************"<<std::endl;
         }
 
         if (searchDistrict->parent->parent != NULL)
@@ -233,6 +188,7 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
         }else{
             searchDistrict = searchDistrict->parent;
         }
+        std::cout<<"final currentDistance: "<<currentDistance<<" "<<currentNearest.second<<std::endl;
     }
     std::pair<float, std::string> result;
     result.first = currentDistance;

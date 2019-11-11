@@ -35,7 +35,6 @@ SET(detour_SRCS
 	src/objectDetect.cpp
 	src/dataBase.cpp
 	src/faceAnalysis.cpp
-	src/KDTree.cpp
 	src/Point.cpp
 )
 SET(detour_HDRS
@@ -52,7 +51,6 @@ SET(detour_HDRS
 	include/utils_config.hpp
 	include/dataBase.hpp
 	include/faceAnalysis.hpp
-	include/kdtree.hpp
 	include/ms_kdtree.hpp
 	include/Point.hpp
 )

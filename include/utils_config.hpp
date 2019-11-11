@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <assert.h>
 const float cosValueThresold = 0.65f;
-const float euclideanValueThresold = 1.2f;
+const float euclideanValueThresold = 1.20f;
 
 typedef struct modelParameter_{
     std::string m_model_weight_;
@@ -70,7 +70,6 @@ struct featureCmp{
 
         assert(leftValue.featureFace.size()==rightValue.featureFace.size());
         assert(leftValue.featureFace.size() == 512);
-
         for(int ii = 0; ii < 512; ii++){
             top += leftValue.featureFace[ii]*rightValue.featureFace[ii];
             bottomLeft += leftValue.featureFace[ii]*leftValue.featureFace[ii];
@@ -80,13 +79,13 @@ struct featureCmp{
         
         float cosValue = (float) (top/(sqrt(bottomLeft)*sqrt(bottomRight)));
         float Euclidean = std::sqrt(EuclideanValue);
-        if(cosValue > cosValueThresold && Euclidean < euclideanValueThresold){
+
+        if(Euclidean <= euclideanValueThresold){
             return false;
         }else{
-            if(bottomLeft != bottomRight){
-                return bottomLeft < bottomRight;
-            }else{
-                return (bottomLeft + 0.00025) > bottomRight;
+            for(int ii = 0; ii < 512; ii++){
+                if(std::abs(leftValue.featureFace[ii])!=std::abs(rightValue.featureFace[ii]))
+                    return std::abs(leftValue.featureFace[ii])>std::abs(rightValue.featureFace[ii]);
             }
         }
     }
@@ -134,7 +133,7 @@ static std::pair<float, std::string>serachCollectDataNameByloop(FaceBase dataCol
         vector_feature subFaceDataSet = dataColletcion.find(gender)->second;
         for(int nn = 0; nn<subFaceDataSet.size(); nn++){
             comDist = computeDistance(feature.featureFace, subFaceDataSet[nn].second.featureFace, 1);
-            printf("nn: %d, cosDis: %f, dataset name: %s\n", nn, comDist, subFaceDataSet[nn].first.c_str());
+            //printf("nn: %d, cosDis: %f, dataset name: %s\n", nn, comDist, subFaceDataSet[nn].first.c_str());
             if(maxDist < comDist){
                 result.second = subFaceDataSet[nn].first;
                 result.first = comDist;
@@ -147,6 +146,51 @@ static std::pair<float, std::string>serachCollectDataNameByloop(FaceBase dataCol
     }
     return result;
 }
+
+
+/****************计算维度的标准方差*********************/
+static float computeVariance(Prediction Dimfeature){
+    float mean = 0.f, variance = 0.f;
+    for(int i = 0; i < Dimfeature.size(); i++){
+        mean += Dimfeature[i];
+        variance += std::pow((Dimfeature[i]), 2.0);
+    }
+    mean *= float(1 / Dimfeature.size());
+    variance *= float(1 / Dimfeature.size());
+    variance = variance - std::pow(mean, 2.0);
+    return variance;
+}
+/****************计算每个维度的中度值*******************/
+static float computeMedianValue(std::vector<std::pair<Prediction, std::string > > points, int featureIdx){
+    Prediction dimfeature;
+    int nrof_samples = points.size(); 
+    for(int i = 0; i < nrof_samples; i++){
+        dimfeature.push_back(points[i].first[featureIdx]);
+    }
+    std::sort(dimfeature.begin(), dimfeature.end());
+    int pos = dimfeature.size() /2 ;
+    return dimfeature[pos];
+}
+/****************计算样本中每个维度的方差值***************/
+static int choose_feature(std::vector<std::pair<Prediction, std::string > > points){
+    int nrof_samples = points.size(); 
+    int N = points[0].first.size();
+    Prediction dimfeature;
+    float variance_max = 0.f;
+    int featureidx = 0;
+    for(int i = 0; i < N; i++){
+        dimfeature.clear();
+        for(int j = 0; j < nrof_samples; j++)
+            dimfeature.push_back(points[j].first[i]);
+        float variance = computeVariance(dimfeature);
+        if(variance_max < variance){
+            variance_max = variance;
+            featureidx = i;
+        }
+    }
+    return featureidx;
+}
+
 
 static std::string serachCollectDataNameBymapSet(mapFaceCollectDataSet dataTestSet,
              encodeFeature detFeature, int gender){
@@ -167,7 +211,7 @@ static std::string serachCollectDataNameBymapSet(mapFaceCollectDataSet dataTestS
 
 static std::string faceDir = "../faceBase";
 static std::string facefeaturefile = "../savefeature.txt";
-
+static std::string cropfaceDir = "../faceCropBase/";
 static modelParameter detParam ={
     .m_model_weight_ = "../model/face_detector.caffemodel",
     .m_model_prototxt_ = "../model/face_detector.prototxt",

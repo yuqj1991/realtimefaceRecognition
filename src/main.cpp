@@ -11,13 +11,43 @@
 #include "utils_config.hpp"
 #include "dataBase.hpp"
 #include "ms_kdtree.hpp"
-#include "kdtree.hpp"
 
 #include<ctime>
 
 using namespace cv;
 using namespace RESIDEO;
 
+mapFaceCollectDataSet getmapDatafaceBase(FaceBase &dataColletcion){
+	mapFaceCollectDataSet dataTestSet;
+	FaceBase::iterator it;
+	std::cout<<"************************"<<std::endl;
+	for(it = dataColletcion.begin(); it != dataColletcion.end(); it++){
+		int gender = it->first;
+		vector_feature feature = it->second;
+		for(int i = 0; i < feature.size(); i++){
+
+		}
+		mapFeature subfeature;
+		
+		if(dataTestSet.find(gender) == dataTestSet.end()){
+			for(int j = 0; j < feature.size(); j++){
+				std::cout<<"gender: "<<gender<<" j: "<<j<<std::endl;
+				subfeature.insert(std::make_pair(feature[j].second, feature[j].first));
+			}
+			std::cout<<"feature size: "<<subfeature.size()<<std::endl;
+			dataTestSet.insert(std::make_pair(gender, subfeature));
+		}
+	}
+	int num = 0;
+	mapFaceCollectDataSet::iterator iter;
+	for(iter = dataTestSet.begin(); iter != dataTestSet.end(); iter++){
+		mapFeature subfeature = iter->second;
+		num += subfeature.size();
+	}
+	std::cout<<"map num: "<<num<<std::endl;
+	return dataTestSet;
+}
+/************************以上测试map*********************************/
 int main(int argc, char* argv[]){
 	faceAnalysis faceInfernece;
 
@@ -35,20 +65,7 @@ int main(int argc, char* argv[]){
 	}
 	KDtreeNode *kdtree = new KDtreeNode;
 	buildKdtree(kdtree, trainData);
-#endif
-	mapFaceCollectDataSet dataTestSet;
-	FaceBase::iterator it;
-    for(it = dataColletcion.begin(); it != dataColletcion.end(); it++){
-        vector_feature feature = it->second;
-        mapFeature subfeature;
-        for(int j = 0; j < feature.size(); j++){
-            subfeature.insert(std::make_pair(feature[j].second, feature[j].first));
-        }
-        int gender = it->first;
-        dataTestSet[gender] = subfeature;
-    }
 
-#if 1
     /**********************初始化跟踪******************/
 	KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
 	Mat frame;
@@ -86,21 +103,22 @@ int main(int argc, char* argv[]){
 					resutTrack.push_back(trackBoxInfo);//获取跟踪信息
 					*/ 
 					encodeFeature detFeature = result[ii].faceFeature;
+<<<<<<< HEAD
 					#if 0
 					#if 0 //loop
+=======
+					#if 1 //loop
+>>>>>>> 2e1a88f1da7baa0a53002258c905a1df976910c9
 					
 					std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
              															detFeature, result[ii].faceAttri.gender);
 					person = nearestNeighbor.second;
-					#else
-					std::pair<float, std::string > nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, kdtree);
-					person = nearestNeighbor.second;
-					#endif
 					if(nearestNeighbor.first < cosValueThresold){
 						person = "unknown man";
 					}
-					#else
-					person = serachCollectDataNameBymapSet(dataTestSet, detFeature, result[ii].faceAttri.gender);
+					#else //kdtree
+					std::pair<float, std::string > nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, kdtree);
+					person = nearestNeighbor.second;
 					#endif
 				}
 				box detBox = result[ii].faceBox;
