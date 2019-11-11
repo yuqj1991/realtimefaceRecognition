@@ -1,12 +1,5 @@
 #include  "objectbase.hpp"
 
-/*
-*i need to define several marcols
-*
-*#define LOG_IF()
-*#define CHECK(condition) \
-*    LOG_IF() << " check failed: " #condition " "
-*/
 namespace RESIDEO{
     objectbase::objectbase(modelParameter &param):m_model_parameter(param){
     }

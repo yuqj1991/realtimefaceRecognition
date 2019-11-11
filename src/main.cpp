@@ -66,14 +66,12 @@ int main(int argc, char* argv[]){
 	KDtreeNode *kdtree = new KDtreeNode;
 	buildKdtree(kdtree, trainData);
 
-    /**********************初始化跟踪******************/
 	KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
+    /**********************初始化跟踪******************/
 	Mat frame;
-	/**********************跟踪结果********************/
 	Rect result;
 	int FrameIdx = 0;
 	int nFrames = 0;
-	/*********************打开摄像头 ******************/
 	VideoCapture cap(0);  
     if(!cap.isOpened())  
     {  
@@ -103,13 +101,7 @@ int main(int argc, char* argv[]){
 					resutTrack.push_back(trackBoxInfo);//获取跟踪信息
 					*/ 
 					encodeFeature detFeature = result[ii].faceFeature;
-<<<<<<< HEAD
-					#if 0
-					#if 0 //loop
-=======
 					#if 1 //loop
->>>>>>> 2e1a88f1da7baa0a53002258c905a1df976910c9
-					
 					std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
              															detFeature, result[ii].faceAttri.gender);
 					person = nearestNeighbor.second;
