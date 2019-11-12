@@ -201,8 +201,8 @@ void printKdTree(KDtreeNode *tree, unsigned depth)
     for (unsigned i = 0; i < depth; ++i)
     cout << "\t";
             
-    for (vector<double>::size_type j = 0; j < tree->root.size(); ++j)
-        cout << tree->root[j] << ",";
+    for (vector<double>::size_type j = 0; j < tree->root.first.size(); ++j)
+        cout << tree->root.first[j] << ",";
     cout << endl;
     if (tree->leftChild == NULL && tree->rightChild == NULL )//叶子节点
         return;
