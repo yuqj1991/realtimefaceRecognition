@@ -44,8 +44,9 @@ int main(int argc, char* argv[]){
 		}
 	}
 	KDtreeNode *kdtree = new KDtreeNode;
-	buildKdtree(kdtree, trainData);
+	buildKdtree(kdtree, trainData, 0);
 	clock_t startTime,endTime;
+	printKdTree(kdtree, 0);
  	startTime = clock();//计时开始
 	std::pair<float, std::string > nearestNeighbor = searchNearestNeighbor(goal, kdtree);
 	endTime = clock();//计时结束

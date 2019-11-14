@@ -64,7 +64,8 @@ int main(int argc, char* argv[]){
 		}
 	}
 	KDtreeNode *kdtree = new KDtreeNode;
-	buildKdtree(kdtree, trainData);
+	buildKdtree(kdtree, trainData, 0);
+	printKdTree(kdtree, 0);
 
 	KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
     /**********************初始化跟踪******************/
@@ -101,7 +102,7 @@ int main(int argc, char* argv[]){
 					resutTrack.push_back(trackBoxInfo);//获取跟踪信息
 					*/ 
 					encodeFeature detFeature = result[ii].faceFeature;
-					#if 1 //loop
+					#if 0 //loop
 					std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
              															detFeature, result[ii].faceAttri.gender);
 					person = nearestNeighbor.second;
