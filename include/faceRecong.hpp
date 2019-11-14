@@ -35,12 +35,12 @@ namespace RESIDEO{
             inline encodeFeature normL2Vector(encodeFeature en_feature){
                 assert(en_feature.featureFace.size() == 512);
                 float sum_vector;
-                for(int i = 0; i < en_feature.featureFace.size(); i++){
+                for(unsigned i = 0; i < en_feature.featureFace.size(); i++){
                     sum_vector += std::pow(en_feature.featureFace[i], 2);
                 }
                 float sum_sqrt =std::sqrt(sum_vector) + 0.0000001;
                 encodeFeature normVector;
-                for(int i = 0; i < en_feature.featureFace.size(); i++){
+                for(unsigned i = 0; i < en_feature.featureFace.size(); i++){
                     normVector.featureFace.push_back( float (en_feature.featureFace[i] / sum_sqrt));
                 }
                 return normVector;

@@ -11,7 +11,7 @@ namespace RESIDEO{
         std::ofstream outfile;
         outfile.open(m_faceFile, ios::out|ios::trunc);
         outfile.clear();
-        for(int i = 0; i < filenames.size(); i++){
+        for(unsigned i = 0; i < filenames.size(); i++){
             std::cout<<"****image name: "<<filenames[i]<<std::endl;
             cv::Mat image = cv::imread(filenames[i]);
             if (!image.data)
@@ -19,7 +19,7 @@ namespace RESIDEO{
                 printf("No image data\n");
                 return ;
             }
-            std::vector<faceAnalysisResult> result= faceRegister.faceInference(image, 32, 20.0f);
+            std::vector<faceAnalysisResult> result= faceRegister.faceInference(image, detMargin, 20.0f);
             if (result.size() > 1){
                 std::cout << "file =" << __FILE__ << ", line =" << __LINE__ << ", faceDetect result more than one: "
                                         <<result.size()<<" image name: "<<filenames[i]<<std::endl;
@@ -37,7 +37,7 @@ namespace RESIDEO{
                 if(result[0].haveFeature){
                     outfile << RegisterName;
                     outfile << " "<<result[0].faceAttri.gender<<" ";
-                    for(int nn = 0; nn< result[0].faceFeature.featureFace.size(); nn++)
+                    for(unsigned nn = 0; nn< result[0].faceFeature.featureFace.size(); nn++)
                         outfile << " "<<result[0].faceFeature.featureFace[nn];
                 }else{
                     std::cout << "file =" << __FILE__ << ", line =" << __LINE__ 

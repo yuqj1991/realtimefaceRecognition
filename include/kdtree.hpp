@@ -10,6 +10,49 @@ using namespace std;
 
 typedef std::vector<std::pair<Prediction, std::string > > KDtype;  
 
+
+/****************计算维度的标准方差*********************/
+static float computeVariance(Prediction Dimfeature){
+    float mean = 0.f, variance = 0.f;
+    for(int i = 0; i < Dimfeature.size(); i++){
+        mean += Dimfeature[i];
+        variance += std::pow((Dimfeature[i]), 2.0);
+    }
+    mean *= float(1 / Dimfeature.size());
+    variance *= float(1 / Dimfeature.size());
+    variance = variance - std::pow(mean, 2.0);
+    return variance;
+}
+/****************计算每个维度的中度值*******************/
+static float computeMedianValue(KDtype  points, int featureIdx){
+    Prediction dimfeature;
+    int nrof_samples = points.size(); 
+    for(int i = 0; i < nrof_samples; i++){
+        dimfeature.push_back(points[i].first[featureIdx]);
+    }
+    std::sort(dimfeature.begin(), dimfeature.end());
+    int pos = dimfeature.size() /2 ;
+    return dimfeature[pos];
+}
+/****************计算样本中每个维度的方差值***************/
+static int choose_feature(KDtype points){
+    int nrof_samples = points.size(); 
+    int N = points[0].first.size();
+    Prediction dimfeature;
+    float variance_max = 0.f;
+    int featureidx = 0;
+    for(int i = 0; i < N; i++){
+        dimfeature.clear();
+        for(int j = 0; j < nrof_samples; j++)
+            dimfeature.push_back(points[j].first[i]);
+        float variance = computeVariance(dimfeature);
+        if(variance_max < variance){
+            variance_max = variance;
+            featureidx = i;
+        }
+    }
+    return featureidx;
+}
 struct KDtreeNode{
     std::pair<Prediction, std::string > root;
     KDtreeNode* parent;

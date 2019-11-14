@@ -131,7 +131,7 @@ static std::pair<float, std::string>serachCollectDataNameByloop(FaceBase dataCol
     float maxDist = 0.f, comDist = 0.f;
     if(dataColletcion.find(gender)!=dataColletcion.end()){
         vector_feature subFaceDataSet = dataColletcion.find(gender)->second;
-        for(int nn = 0; nn<subFaceDataSet.size(); nn++){
+        for(unsigned nn = 0; nn<subFaceDataSet.size(); nn++){
             comDist = computeDistance(feature.featureFace, subFaceDataSet[nn].second.featureFace, 1);
             //printf("nn: %d, cosDis: %f, dataset name: %s\n", nn, comDist, subFaceDataSet[nn].first.c_str());
             if(maxDist < comDist){
@@ -147,49 +147,6 @@ static std::pair<float, std::string>serachCollectDataNameByloop(FaceBase dataCol
     return result;
 }
 
-
-/****************计算维度的标准方差*********************/
-static float computeVariance(Prediction Dimfeature){
-    float mean = 0.f, variance = 0.f;
-    for(int i = 0; i < Dimfeature.size(); i++){
-        mean += Dimfeature[i];
-        variance += std::pow((Dimfeature[i]), 2.0);
-    }
-    mean *= float(1 / Dimfeature.size());
-    variance *= float(1 / Dimfeature.size());
-    variance = variance - std::pow(mean, 2.0);
-    return variance;
-}
-/****************计算每个维度的中度值*******************/
-static float computeMedianValue(std::vector<std::pair<Prediction, std::string > > points, int featureIdx){
-    Prediction dimfeature;
-    int nrof_samples = points.size(); 
-    for(int i = 0; i < nrof_samples; i++){
-        dimfeature.push_back(points[i].first[featureIdx]);
-    }
-    std::sort(dimfeature.begin(), dimfeature.end());
-    int pos = dimfeature.size() /2 ;
-    return dimfeature[pos];
-}
-/****************计算样本中每个维度的方差值***************/
-static int choose_feature(std::vector<std::pair<Prediction, std::string > > points){
-    int nrof_samples = points.size(); 
-    int N = points[0].first.size();
-    Prediction dimfeature;
-    float variance_max = 0.f;
-    int featureidx = 0;
-    for(int i = 0; i < N; i++){
-        dimfeature.clear();
-        for(int j = 0; j < nrof_samples; j++)
-            dimfeature.push_back(points[j].first[i]);
-        float variance = computeVariance(dimfeature);
-        if(variance_max < variance){
-            variance_max = variance;
-            featureidx = i;
-        }
-    }
-    return featureidx;
-}
 
 
 static std::string serachCollectDataNameBymapSet(mapFaceCollectDataSet dataTestSet,

@@ -100,7 +100,7 @@ int main(int argc, char* argv[]){
 		int nDataBaseSize = 0;
 		if(FrameIdx % 1 == 0){
 			resutTrack.clear();
-			std::vector<faceAnalysisResult> result= faceInfernece.faceInference(frame, 32, 20.0f);
+			std::vector<faceAnalysisResult> result= faceInfernece.faceInference(frame, detMargin, 20.0f);
 			string person = "unknown man";
 			
 			for(int ii = 0; ii < result.size(); ii++){
