@@ -93,20 +93,22 @@ void buildKdtree(KDtreeNode* tree, std::vector<std::pair<Prediction, std::string
 
 void getNearestNode(Prediction goal, KDtreeNode *tree, float *Distance, KDtreeNode *currentTree){
     float currentDistance = 0.f;
+    KDtreeNode *NearestTree ;
     float parentDistance = computeDistance(goal, tree->root.first, 0);
     std::cout<<"Distance: "<< *Distance<<", parentDistance: "<<parentDistance<<", "<<tree->root.second<<std::endl;
     if(*Distance > parentDistance){
         currentDistance = parentDistance;
-        currentTree = tree;
+        NearestTree = tree;
     }else{
         currentDistance = *Distance;
+        NearestTree = currentTree;
     }
     std::cout<<"currentDistance: "<< currentDistance<<", "<<currentTree->root.second<<std::endl;
     if(tree->leftChild != NULL  && !tree->leftChild->isEmpty()){
-        getNearestNode(goal, tree ->leftChild, &currentDistance, currentTree);
+        getNearestNode(goal, tree ->leftChild, &currentDistance, NearestTree);
     }
     if(tree->rightChild != NULL  && !tree->rightChild->isEmpty()){
-        getNearestNode(goal, tree ->rightChild, &currentDistance, currentTree);
+        getNearestNode(goal, tree ->rightChild, &currentDistance, NearestTree);
     }
 }
 
