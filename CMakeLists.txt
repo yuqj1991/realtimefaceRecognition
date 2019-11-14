@@ -51,7 +51,7 @@ SET(detour_HDRS
 	include/utils_config.hpp
 	include/dataBase.hpp
 	include/faceAnalysis.hpp
-	include/ms_kdtree.hpp
+	include/kdtree.hpp
 	include/Point.hpp
 )
 

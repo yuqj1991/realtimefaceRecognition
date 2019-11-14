@@ -8,6 +8,7 @@
 #include "utils_config.hpp"
 using namespace std;
 
+typedef std::vector<std::pair<Prediction, std::string > > KDtype;  
 
 struct KDtreeNode{
     std::pair<Prediction, std::string > root;
@@ -46,7 +47,7 @@ struct KDtreeNode{
     }
 };
 
-void buildKdtree(KDtreeNode* tree, std::vector<std::pair<Prediction, std::string > > points, unsigned depth){
+void buildKdtree(KDtreeNode* tree, KDtype points, unsigned depth){
     //样本的数量
     unsigned samplesNum = points.size();
     
@@ -67,8 +68,8 @@ void buildKdtree(KDtreeNode* tree, std::vector<std::pair<Prediction, std::string
         splitAttributeValues.push_back(points[i].first[splitAttribute]);
     
     /*******根据选定的切分属性和切分值，将数据集分为两个子集**/
-    std::vector<std::pair<Prediction, std::string > > subset_left;
-    std::vector<std::pair<Prediction, std::string > > subset_right;
+    KDtype subset_left;
+    KDtype subset_right;
     tree->splitDim = splitAttribute;
     tree->splitvalue = splitValue;
     
@@ -91,24 +92,24 @@ void buildKdtree(KDtreeNode* tree, std::vector<std::pair<Prediction, std::string
     buildKdtree(tree->rightChild, subset_right, depth + 1);
 }
 
-void getNearestNode(Prediction goal, KDtreeNode *tree, float *Distance, KDtreeNode *currentTree){
-    float currentDistance = 0.f;
-    KDtreeNode *NearestTree ;
-    float parentDistance = computeDistance(goal, tree->root.first, 0);
-    std::cout<<"Distance: "<< *Distance<<", parentDistance: "<<parentDistance<<", "<<tree->root.second<<std::endl;
-    if(*Distance > parentDistance){
-        currentDistance = parentDistance;
-        NearestTree = tree;
-    }else{
-        currentDistance = *Distance;
-        NearestTree = currentTree;
+void findNearestNode(Prediction goal, KDtreeNode *tree, float *Distance, std::string &nearestName){
+    if(tree->isEmpty()){
+        return;
     }
-    std::cout<<"currentDistance: "<< currentDistance<<", "<<currentTree->root.second<<std::endl;
+    float computeDistance_ = computeDistance(goal, tree->root.first, 0);
+    if(*Distance >= computeDistance_){
+        *Distance = computeDistance_;
+        nearestName = tree->root.second;
+    }
+    if(tree->isLeaf()){
+        return;
+    }
+    //std::cout<<"*****getNearestNode distance: "<< *Distance<<", nerast name: "<<nearestName<<std::endl;
     if(tree->leftChild != NULL  && !tree->leftChild->isEmpty()){
-        getNearestNode(goal, tree ->leftChild, &currentDistance, NearestTree);
+        findNearestNode(goal, tree ->leftChild, Distance, nearestName);
     }
     if(tree->rightChild != NULL  && !tree->rightChild->isEmpty()){
-        getNearestNode(goal, tree ->rightChild, &currentDistance, NearestTree);
+        findNearestNode(goal, tree ->rightChild, Distance, nearestName);
     }
 }
 
@@ -144,7 +145,8 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
     近邻搜索；如果不相交，向上回退
     */
     //当前最近邻与目标点的距离
-    float currentDistance = computeDistance(goal, currentNearest.first, 0);
+    finalResult.first = computeDistance(goal, currentNearest.first, 0);
+    finalResult.second = currentNearest.second;
     //如果当前子kd树的根结点是其父结点的左孩子，则搜索其父结点的右孩子结点所代表的区域，反之亦反
     KDtreeNode* searchDistrict;
     if (currentTree->isLeft())
@@ -156,54 +158,51 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
     }else{
         searchDistrict = currentTree->parent->leftChild;
     }
-    std::cout<<"~~~~~~~~~~start serach~~~~~~~~~~~~~~~~~"<<std::endl;
-    std::cout<<"raw currentDistance: "<<currentDistance<<", "<<currentNearest.second<<std::endl;
+    //std::cout<<"~~~~~~~~~~start serach~~~~~~~~~~~~~~~~~"<<std::endl;
     //如果搜索区域对应的子kd树的根结点不是整个kd树的根结点，继续回退搜索
     while (searchDistrict->parent != NULL && !searchDistrict->parent->isEmpty()){
         //搜索区域与目标点的最近距离
         float districtDistance = abs(goal[searchDistrict->splitDim] - searchDistrict->parent->root.first[searchDistrict->splitDim]);
-        std::cout<<"districtDistance: "<<districtDistance<<std::endl;
+        //std::cout<<"districtDistance: "<<districtDistance<<std::endl;
         //如果“搜索区域与目标点的最近距离”比“当前最近邻与目标点的距离”短，表明搜索区域内可能存在距离目标点更近的点
-        if (districtDistance < currentDistance ){//&& !searchDistrict->isEmpty()
-
+        if (districtDistance < finalResult.first ){
             float parentDistance = computeDistance(goal, searchDistrict->parent->root.first, 0);
-            std::cout<<"parentDistance: "<<parentDistance<<", "<<searchDistrict->parent->root.second<<std::endl;
-            if (parentDistance < currentDistance){
-                currentDistance = parentDistance;
+            if (parentDistance < finalResult.first){
+                finalResult.first = parentDistance;
                 currentTree = searchDistrict->parent;
                 currentNearest = currentTree->root;
+                finalResult.second = currentNearest.second;
             }
+            //std::cout<<"parent Distance: "<<finalResult.first<<", "<<finalResult.second<<std::endl;
             if (!searchDistrict->isEmpty()){
                 float rootDistance = computeDistance(goal, searchDistrict->root.first, 0);
-                std::cout<<"rootDistance: "<<rootDistance<<", "<<searchDistrict->root.second<<std::endl;
-                if (rootDistance < currentDistance){
-                    currentDistance = rootDistance;
+                if (rootDistance < finalResult.first){
+                    finalResult.first = rootDistance;
                     currentTree = searchDistrict;
                     currentNearest = currentTree->root;
+                    finalResult.second = currentNearest.second;
                 }
             }
+            //std::cout<<"searchDistrict root Distance: "<<finalResult.first<<", name: "<<finalResult.second<<std::endl;
+            string tempName = finalResult.second;
+            float treeDistance = finalResult.first;
             if (searchDistrict->leftChild != NULL && !searchDistrict->leftChild->isEmpty()){
-                float treeDistance = currentDistance;
-                getNearestNode(goal, searchDistrict->leftChild, &treeDistance, currentTree);
-                std::cout<<"left tree Distance: "<<treeDistance<<", currentDistance: "<<currentDistance<<std::endl;
-                std::cout<<"name: "<<currentTree->root.second<<std::endl;
-                if (treeDistance < currentDistance){
-                    currentDistance = treeDistance;
-                    currentNearest = currentTree->root;
-                }            
-            }
-            if (searchDistrict->rightChild != NULL && !searchDistrict->rightChild->isEmpty()){
-                float treeDistance = currentDistance;
-                getNearestNode(goal, searchDistrict->rightChild, &treeDistance, currentTree);
-                std::cout<<"right tree Distance: "<<treeDistance<<", currentDistance: "<<currentDistance<<std::endl;
-                std::cout<<"name: "<<currentTree->root.second<<std::endl;
-                if (treeDistance < currentDistance){
-                    currentDistance = treeDistance;
-                    currentNearest = currentTree->root;
+                findNearestNode(goal, searchDistrict->leftChild, &treeDistance, tempName);
+                if (treeDistance <= finalResult.first){
+                    finalResult.first = treeDistance;
+                    finalResult.second = tempName;
                 }
-            } 
+            }
+            //std::cout<<"left tree root Distance: "<<finalResult.first<<", name: "<<finalResult.second<<std::endl;
+            if (searchDistrict->rightChild != NULL && !searchDistrict->rightChild->isEmpty()){
+                findNearestNode(goal, searchDistrict->rightChild, &treeDistance, tempName);
+                if (treeDistance <= finalResult.first){
+                    finalResult.first = treeDistance;
+                    finalResult.second = tempName;
+                }
+            }
+            //std::cout<<"right tree root Distance: "<<finalResult.first<<", "<<finalResult.second<<std::endl;
         }
-        std::cout<<"**********loop************"<<std::endl;
         if (searchDistrict->parent->parent != NULL)
         {
             searchDistrict = searchDistrict->parent->isLeft()? 
@@ -213,21 +212,14 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
             searchDistrict = searchDistrict->parent;
         }
     }
-    std::cout<<"****final currentDistance: "<<currentDistance<<", "<<currentNearest.second
-        <<"******************"<<std::endl;
-    std::cout<<std::endl;
-    finalResult.first = currentDistance;
-    finalResult.second = currentNearest.second;
+    //std::cout<<"****final Distance: "<<finalResult.first<<", "<<finalResult.second<<"******************"<<std::endl;
+    finalResult.first = finalResult.first;
     return finalResult;
 }
 
 void printKdTree(KDtreeNode *tree, unsigned depth)
-{
-    //for (unsigned i = 0; i < depth; ++i)
-    cout << "\t";
-            
-    cout <<"depth: "<<depth<<", "<< tree->root.second << ",";
-    cout << endl;
+{       
+    cout << "\t"<<"depth: "<<depth<<", "<< tree->root.second << "," << endl;
     if (tree->leftChild == NULL && tree->rightChild == NULL )//叶子节点
         return;
     else //非叶子节点
@@ -240,8 +232,6 @@ void printKdTree(KDtreeNode *tree, unsigned depth)
         cout << endl;
         if (tree->rightChild != NULL)
         {
-            //for (unsigned i = 0; i < depth + 1; ++i)
-            //    cout << "\t";
             cout << "right:";
             printKdTree(tree->rightChild, depth + 1);
         }

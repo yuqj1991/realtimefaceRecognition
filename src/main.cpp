@@ -10,7 +10,7 @@
 #include "kcftracker.hpp"
 #include "utils_config.hpp"
 #include "dataBase.hpp"
-#include "ms_kdtree.hpp"
+#include "kdtree.hpp"
 
 #include<ctime>
 
@@ -56,16 +56,28 @@ int main(int argc, char* argv[]){
 	baseface.generateBaseFeature(faceInfernece);
 #else
 	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(facefeaturefile);
-	std::vector<std::pair<Prediction, std::string > > trainData;
-	for(int i = 0; i < dataColletcion.size(); i++){
-		vector_feature feature = dataColletcion[i];
+	std::map<int, KDtype >trainData;
+	FaceBase::iterator iter;
+	int gender = 0;
+	for(iter = dataColletcion.begin(); iter != dataColletcion.end(); iter++){
+		gender = iter->first;
+		vector_feature feature = iter->second;
 		for(int j = 0; j < feature.size(); j++){
-			trainData.push_back(std::make_pair(feature[j].second.featureFace, feature[j].first));		
+			if(trainData.find(gender) == trainData.end()){
+				KDtype new_feature;
+				new_feature.push_back(std::make_pair(feature[j].second.featureFace, feature[j].first));
+				trainData.insert(std::make_pair(gender, new_feature));
+			}else{
+				KDtype feature_list = trainData.find(gender)->second;
+				feature_list.push_back(std::make_pair(feature[j].second.featureFace, feature[j].first));
+				trainData[gender] = feature_list;
+			}			
 		}
 	}
-	KDtreeNode *kdtree = new KDtreeNode;
-	buildKdtree(kdtree, trainData, 0);
-	printKdTree(kdtree, 0);
+	KDtreeNode *male_kdtree = new KDtreeNode;
+	KDtreeNode *female_kdtree = new KDtreeNode;
+	buildKdtree(male_kdtree, trainData.find(0)->second, 0);
+	buildKdtree(female_kdtree, trainData.find(1)->second, 0);
 
 	KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
     /**********************初始化跟踪******************/
@@ -110,7 +122,14 @@ int main(int argc, char* argv[]){
 						person = "unknown man";
 					}
 					#else //kdtree
-					std::pair<float, std::string > nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, kdtree);
+					std::pair<float, std::string > nearestNeighbor;
+					if(result[ii].faceAttri.gender==0)
+						nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, male_kdtree);
+					else
+					{
+						nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, female_kdtree);	
+					}
+					
 					person = nearestNeighbor.second;
 					#endif
 				}
