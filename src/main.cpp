@@ -114,14 +114,11 @@ int main(int argc, char* argv[]){
 					resutTrack.push_back(trackBoxInfo);//获取跟踪信息
 					*/ 
 					encodeFeature detFeature = result[ii].faceFeature;
-					#if 0 //loop
+					#if 0 //loop search
 					std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
              															detFeature, result[ii].faceAttri.gender);
 					person = nearestNeighbor.second;
-					if(nearestNeighbor.first < cosValueThresold){
-						person = "unknown man";
-					}
-					#else //kdtree
+					#else //kdtree search
 					std::pair<float, std::string > nearestNeighbor;
 					if(result[ii].faceAttri.gender==0)
 						nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, male_kdtree);
@@ -129,9 +126,11 @@ int main(int argc, char* argv[]){
 					{
 						nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, female_kdtree);	
 					}
-					
 					person = nearestNeighbor.second;
 					#endif
+					if(nearestNeighbor.first < cosValueThresold){
+						person = "unknown man";
+					}
 				}
 				box detBox = result[ii].faceBox;
                 cv::rectangle( frame, cv::Point( detBox.xmin, detBox.ymin ), 

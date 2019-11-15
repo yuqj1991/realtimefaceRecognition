@@ -217,6 +217,18 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
                 finalResult.second = currentNearest.second;
             }
             //std::cout<<"parent Distance: "<<finalResult.first<<", "<<finalResult.second<<std::endl;
+            #if 1
+            string tempName = finalResult.second;
+            float treeDistance = finalResult.first;
+            if (!searchDistrict->isEmpty()){
+                
+                findNearestNode(goal, searchDistrict, &treeDistance, tempName);
+                if (treeDistance <= finalResult.first){
+                    finalResult.first = treeDistance;
+                    finalResult.second = tempName;
+                }
+            }
+            #else
             if (!searchDistrict->isEmpty()){
                 float rootDistance = computeDistance(goal, searchDistrict->root.first, 0);
                 if (rootDistance < finalResult.first){
@@ -245,6 +257,7 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
                 }
             }
             //std::cout<<"right tree root Distance: "<<finalResult.first<<", "<<finalResult.second<<std::endl;
+            #endif
         }
         if (searchDistrict->parent->parent != NULL)
         {

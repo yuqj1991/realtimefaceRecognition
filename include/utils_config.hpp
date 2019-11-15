@@ -1,5 +1,6 @@
 #ifndef _RESIDEO_UTILS_HPP_
 #define _RESIDEO_UTILS_HPP_
+#pragma once
 #include <algorithm>
 #include <vector>
 #include <map>
