@@ -12,6 +12,8 @@
 #include "dataBase.hpp"
 #include "kdtree.hpp"
 
+
+#include <lshbox.h>
 #include<ctime>
 
 using namespace cv;
@@ -56,6 +58,7 @@ int main(int argc, char* argv[]){
 	baseface.generateBaseFeature(faceInfernece);
 #else
 	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(facefeaturefile);
+	#ifdef KDTREE_SEARCH
 	std::map<int, KDtype >trainData;
 	FaceBase::iterator iter;
 	int gender = 0;
@@ -78,7 +81,7 @@ int main(int argc, char* argv[]){
 	KDtreeNode *female_kdtree = new KDtreeNode;
 	buildKdtree(male_kdtree, trainData.find(0)->second, 0);
 	buildKdtree(female_kdtree, trainData.find(1)->second, 0);
-
+	#endif
 	KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
     /**********************初始化跟踪******************/
 	Mat frame;
@@ -114,11 +117,7 @@ int main(int argc, char* argv[]){
 					resutTrack.push_back(trackBoxInfo);//获取跟踪信息
 					*/ 
 					encodeFeature detFeature = result[ii].faceFeature;
-					#if 0 //loop search
-					std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
-             															detFeature, result[ii].faceAttri.gender);
-					person = nearestNeighbor.second;
-					#else //kdtree search
+					#if KDTREE_SEARCH //loop search
 					std::pair<float, std::string > nearestNeighbor;
 					if(result[ii].faceAttri.gender==0)
 						nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, male_kdtree);
@@ -126,6 +125,10 @@ int main(int argc, char* argv[]){
 					{
 						nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, female_kdtree);	
 					}
+					person = nearestNeighbor.second;
+					#else //kdtree search
+					std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
+             															detFeature, result[ii].faceAttri.gender);
 					person = nearestNeighbor.second;
 					#endif
 					if(nearestNeighbor.first < cosValueThresold){

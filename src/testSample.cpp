@@ -13,8 +13,26 @@
 #include "kdtree.hpp"
 #include<ctime>
 
+#include <lshbox.h>
 using namespace cv;
 using namespace RESIDEO;
+
+
+std::vector<lshbox::dataUnit> getlshDataset(FaceBase dataColletcion, lshbox::featureUnit &goal){
+		FaceBase::iterator iter;
+		std::vector<lshbox::dataUnit> dataSet;
+		for(iter = dataColletcion.begin(); iter != dataColletcion.end(); iter++){
+			vector_feature feature = iter->second;
+			for(int j = 0; j < feature.size(); j++){
+				if(feature[j].first != "1156174130"){
+					dataSet.push_back(std::make_pair(feature[j].second.featureFace, feature[j].first));
+				}else{
+					goal = feature[j].second.featureFace;
+				}
+			}
+		}
+		return dataSet;
+	}
 
 int main(int argc, char* argv[]){
 	faceAnalysis faceInfernece;
@@ -24,8 +42,8 @@ int main(int argc, char* argv[]){
 	baseface.generateBaseFeature(faceInfernece);
 #else
 	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(facefeaturefile);
-	FaceBase dataSubset;
 
+	FaceBase dataSubset;
 	std::map<int, KDtype >trainData;
 	Prediction goal;
 	encodeFeature detFeature;
@@ -66,15 +84,14 @@ int main(int argc, char* argv[]){
 			
 		}
 	}
-
-	
+	clock_t startTime,endTime;
+	#if 0	
 /****************测试二叉树检索方式**********************************************/
 	KDtreeNode *male_kdtree = new KDtreeNode;
 	KDtreeNode *female_kdtree = new KDtreeNode;
 	buildKdtree(male_kdtree, trainData.find(0)->second, 0);
 	buildKdtree(female_kdtree, trainData.find(1)->second, 0);
 	std::cout<<"build tree end"<<std::endl;
-	clock_t startTime,endTime;
 	//printKdTree(kdtree, 0);
  	startTime = clock();//计时开始
 	std::pair<float, std::string > nearestNeighbor;
@@ -86,18 +103,7 @@ int main(int argc, char* argv[]){
 	endTime = clock();//计时结束
 	std::cout << "kd tree run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
     std::cout<<"the kd method result: "<<nearestNeighbor.second<<std::endl;
-
-
-/****************测试循环检索方式**********************************************/
-	startTime = clock();//计时开始
-	std::pair<float, std::string>nearestNeighbor_loop= serachCollectDataNameByloop(dataSubset,
-             															detFeature, goal_gender);
-	std::string person = nearestNeighbor_loop.second;
-	endTime = clock();//计时结束
-	std::cout << "loop run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
-	std::cout<<"the loop method result: "<<person<<std::endl;
-
-
+	#else
 /****************测试map方式*************************************************/
     mapFaceCollectDataSet dataTestSet;
 	
@@ -118,11 +124,54 @@ int main(int argc, char* argv[]){
     }
     std::cout<<"num: "<<num<<std::endl;
     startTime = clock();//计时开始
-    person = serachCollectDataNameBymapSet(dataTestSet,
+    std::string person = serachCollectDataNameBymapSet(dataTestSet,
              detFeature, goal_gender);
     endTime = clock();//计时结束
 	std::cout << "map method run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
-    std::cout<<"the third method result: "<<person<<std::endl;
-/**************************************************************************/
+	std::cout<<"the third method result: "<<person<<std::endl;
+	#endif
+/****************测试循环检索方式**********************************************/
+	startTime = clock();//计时开始
+	std::pair<float, std::string>nearestNeighbor_loop= serachCollectDataNameByloop(dataSubset,
+             															detFeature, goal_gender);
+	std::string person_loop = nearestNeighbor_loop.second;
+	endTime = clock();//计时结束
+	std::cout << "loop run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
+	std::cout<<"the loop method result: "<<person_loop<<std::endl;
+
+#endif
+
+/***********************lsh method*****************************************/
+#if 1
+	
+	lshbox::featureUnit lshgoal;
+	std::vector<lshbox::dataUnit> lshDataSet = getlshDataset(dataColletcion, lshgoal);
+	std::string file = "lsh.binary";
+	bool use_index = false;
+    lshbox::PSD_VECTOR_LSH<float> mylsh;
+    if (use_index)
+    {
+        mylsh.load(file);
+    }else{
+        lshbox::PSD_VECTOR_LSH<float>::Parameter param;
+        param.M = 521;
+        param.L = 5;
+        param.D = 512;
+        param.T = GAUSSIAN;
+        param.W = 0.5;
+		mylsh.reset(param);
+        mylsh.hash(lshDataSet);
+        mylsh.save(file);
+    }
+	lshbox::Matrix<float> metricData(lshDataSet, lshDataSet.size(), 512);
+	lshbox::Matrix<float>::Accessor accessor(metricData);
+    lshbox::Metric<float> metric(512, L2_DIST);
+    unsigned K = 1;
+    lshbox::Scanner<lshbox::Matrix<float>::Accessor> scanner(
+        accessor,
+        metric,
+        K
+    );
+	mylsh.query(lshgoal, scanner);
 #endif
 }

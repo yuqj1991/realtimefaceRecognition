@@ -53,6 +53,8 @@ SET(detour_HDRS
 	include/faceAnalysis.hpp
 	include/kdtree.hpp
 	include/Point.hpp
+	include/eigen
+	include/lshbox
 )
 
 add_library(faceInference SHARED ${detour_SRCS} ${detour_HDRS})
