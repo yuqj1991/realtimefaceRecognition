@@ -124,6 +124,7 @@ private:
     std::vector<float> rndBs;
     std::vector<std::vector<float> > stableArray;
     std::vector<std::map<unsigned, std::vector<unsigned> > > tables;
+    std::vector<>
 };
 }
 
@@ -176,19 +177,20 @@ void lshbox::PSD_VECTOR_LSH<DATATYPE>::hash(std::vector<dataUnit> &data)
     progress_display pd(data.size());
     for (unsigned i = 0; i != data.size(); ++i)
     {
-        insert(i, data[i].first);
+        insert(i, data[i]);
         ++pd;
     }
 }
 template<typename DATATYPE>
-void lshbox::PSD_VECTOR_LSH<DATATYPE>::insert(unsigned key, const featureUnit domin)
+void lshbox::PSD_VECTOR_LSH<DATATYPE>::insert(unsigned key, const dataUnit domin)
 {
     for (unsigned k = 0; k != param.L; ++k)
     {
-        unsigned hashVal = getHashVal(k, domin);
+        unsigned hashVal = getHashVal(k, domin.first);
         tables[k][hashVal].push_back(key);
     }
 }
+/*
 template<typename DATATYPE>
 template<typename SCANNER>
 void lshbox::PSD_VECTOR_LSH<DATATYPE>::query(const featureUnit domin, SCANNER &scanner)
@@ -199,6 +201,7 @@ void lshbox::PSD_VECTOR_LSH<DATATYPE>::query(const featureUnit domin, SCANNER &s
         unsigned hashVal = getHashVal(k, domin);
         if (tables[k].find(hashVal) != tables[k].end())
         {
+
             for (std::vector<unsigned>::iterator iter = tables[k][hashVal].begin(); iter != tables[k][hashVal].end(); ++iter)
             {
                 scanner(*iter);
@@ -206,6 +209,31 @@ void lshbox::PSD_VECTOR_LSH<DATATYPE>::query(const featureUnit domin, SCANNER &s
         }
     }
     scanner.topk().genTopk();
+}
+*/
+
+template<typename DATATYPE>
+std:: string lshbox::PSD_VECTOR_LSH<DATATYPE>::query(featureUnit domin, Metric<DATATYPE> metric,
+                     std::vector<dataUnit> &data){
+    DATATYPE distance = 0.0;
+    std::string nearestName ;
+    for (unsigned k = 0; k != param.L; ++k){
+        unsigned hashVal = getHashVal(k, domin);
+        if (tables[k].find(hashVal) != tables[k].end()){
+            for (std::vector<unsigned>::iterator iter = tables[k][hashVal].begin(); 
+                            iter != tables[k][hashVal].end(); ++iter)
+            {
+                for(unsigned i = 0; i < iter->size(); i++){
+                    DATATPYE currentDistance = metric.dist(domin, data[i].first);
+                    if(currentDistance < distance){
+                        distance = currentDistance;
+                        nearestName = data[i].second;
+                    }
+                }
+            }
+        }
+    }
+    return nearestName;
 }
 template<typename DATATYPE>
 unsigned lshbox::PSD_VECTOR_LSH<DATATYPE>::getHashVal(unsigned k, const featureUnit domin)

@@ -139,7 +139,7 @@ public:
     {
         reset(_dim, _N);
         for(unsigned i = 0; i < vec.size(); i++){
-            memcpy(dims + dim, (void*)&vec[i].first[0], sizeof(T) * dim);
+            memcpy(dims + i*dim, (void*)&vec[i].first[0], sizeof(T) * dim);
         }
         
     }

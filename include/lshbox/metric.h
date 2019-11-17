@@ -98,5 +98,32 @@ public:
         }
         }
     }
+    float dist(std::vector<DATATYPE> vec1, std::vector<DATATYPE> vec2) const
+    {
+        float dist_ = 0.0;
+        switch (type_)
+        {
+        case L1_DIST:
+        {
+            for (unsigned i = 0; i != dim_; ++i)
+            {
+                dist_ += float(std::abs(vec1[i] * 1.0 - vec2[i]));
+            }
+            return dist_;
+        }
+        case L2_DIST:
+        {
+            for (unsigned i = 0; i != dim_; ++i)
+            {
+                dist_ += sqr(vec1[i] - vec2[i]);
+            }
+            return std::sqrt(dist_);
+        }
+        default:
+        {
+            return -1;
+        }
+        }
+    }
 };
 }
