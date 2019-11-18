@@ -90,15 +90,17 @@ public:
      * @param key   The sequence number of vector
      * @param domin The pointer to the vector
      */
-    void insert(unsigned key, const featureUnit domin);
+    void insert(unsigned key, const dataUnit domin);
     /**
      * Query the approximate nearest neighborholds.
      *
      * @param domin   The pointer to the vector
      * @param scanner Top-K scanner, use for scan the approximate nearest neighborholds
      */
-    template<typename SCANNER>
-    void query(const featureUnit domin, SCANNER &scanner);
+    //template<typename SCANNER>
+    //void query(const featureUnit domin, SCANNER &scanner);
+    
+    std::pair<DATATYPE, std::string > query(featureUnit domin, Metric<DATATYPE> metric, std::vector<dataUnit> &data);
     /**
      * get the hash value of a vector.
      *
@@ -124,7 +126,7 @@ private:
     std::vector<float> rndBs;
     std::vector<std::vector<float> > stableArray;
     std::vector<std::map<unsigned, std::vector<unsigned> > > tables;
-    std::vector<>
+    //std::vector<>
 };
 }
 
@@ -213,27 +215,29 @@ void lshbox::PSD_VECTOR_LSH<DATATYPE>::query(const featureUnit domin, SCANNER &s
 */
 
 template<typename DATATYPE>
-std:: string lshbox::PSD_VECTOR_LSH<DATATYPE>::query(featureUnit domin, Metric<DATATYPE> metric,
+std::pair<DATATYPE, std::string > lshbox::PSD_VECTOR_LSH<DATATYPE>::query(featureUnit domin, Metric<DATATYPE> metric,
                      std::vector<dataUnit> &data){
-    DATATYPE distance = 0.0;
-    std::string nearestName ;
+    std::pair<DATATYPE, std::string> finalResult;
+    int numCompure = 0;
     for (unsigned k = 0; k != param.L; ++k){
         unsigned hashVal = getHashVal(k, domin);
         if (tables[k].find(hashVal) != tables[k].end()){
             for (std::vector<unsigned>::iterator iter = tables[k][hashVal].begin(); 
-                            iter != tables[k][hashVal].end(); ++iter)
-            {
-                for(unsigned i = 0; i < iter->size(); i++){
-                    DATATPYE currentDistance = metric.dist(domin, data[i].first);
-                    if(currentDistance < distance){
-                        distance = currentDistance;
-                        nearestName = data[i].second;
-                    }
+                            iter != tables[k][hashVal].end(); ++iter){
+                DATATYPE currentDistance = metric.dist(domin, data[*iter].first);
+                if(numCompure == 0){
+                    finalResult.first = currentDistance;
+                    finalResult.second = data[*iter].second;
+                    numCompure = 1;
+                }else if(currentDistance < finalResult.first){
+                    finalResult.first = currentDistance;
+                    finalResult.second = data[*iter].second;
                 }
+                //std::cout<<"currentDistance: "<<distance<<" nearestName: "<< nearestName<<std::endl;
             }
         }
     }
-    return nearestName;
+    return finalResult;
 }
 template<typename DATATYPE>
 unsigned lshbox::PSD_VECTOR_LSH<DATATYPE>::getHashVal(unsigned k, const featureUnit domin)

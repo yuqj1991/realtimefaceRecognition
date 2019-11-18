@@ -32,7 +32,7 @@ std::vector<lshbox::dataUnit> getlshDataset(FaceBase dataColletcion, lshbox::fea
 			}
 		}
 		return dataSet;
-	}
+}
 
 int main(int argc, char* argv[]){
 	faceAnalysis faceInfernece;
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]){
 		}
 	}
 	clock_t startTime,endTime;
-	#if 0	
+	#if 1	
 /****************测试二叉树检索方式**********************************************/
 	KDtreeNode *male_kdtree = new KDtreeNode;
 	KDtreeNode *female_kdtree = new KDtreeNode;
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]){
              detFeature, goal_gender);
     endTime = clock();//计时结束
 	std::cout << "map method run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
-	std::cout<<"the third method result: "<<person<<std::endl;
+	std::cout << "map method result: "<<person<<std::endl;
 	#endif
 /****************测试循环检索方式**********************************************/
 	startTime = clock();//计时开始
@@ -163,15 +163,21 @@ int main(int argc, char* argv[]){
         mylsh.hash(lshDataSet);
         mylsh.save(file);
     }
-	lshbox::Matrix<float> metricData(lshDataSet, lshDataSet.size(), 512);
-	lshbox::Matrix<float>::Accessor accessor(metricData);
+	//lshbox::Matrix<float> metricData(lshDataSet, lshDataSet.size(), 512);
+	//lshbox::Matrix<float>::Accessor accessor(metricData);
     lshbox::Metric<float> metric(512, L2_DIST);
     unsigned K = 1;
-    lshbox::Scanner<lshbox::Matrix<float>::Accessor> scanner(
+    /*
+	lshbox::Scanner<lshbox::Matrix<float>::Accessor> scanner(
         accessor,
         metric,
         K
     );
-	mylsh.query(lshgoal, scanner);
+	*/
+	startTime = clock();//计时开始
+	std::pair<float, std::string>nearestNeighbor_lsh = mylsh.query(lshgoal, metric, lshDataSet);
+	endTime = clock();//计时结束
+	std::cout << "hash run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
+	std::cout<<"the hash method result: "<<nearestNeighbor_lsh.second<<std::endl;
 #endif
 }

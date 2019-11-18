@@ -19,6 +19,10 @@
 using namespace cv;
 using namespace RESIDEO;
 
+#define KDTREE_SEARCH
+//#define LSH_SEARCH
+//#define LOOP_SEARCH
+
 mapFaceCollectDataSet getmapDatafaceBase(FaceBase &dataColletcion){
 	mapFaceCollectDataSet dataTestSet;
 	FaceBase::iterator it;
@@ -49,6 +53,19 @@ mapFaceCollectDataSet getmapDatafaceBase(FaceBase &dataColletcion){
 	std::cout<<"map num: "<<num<<std::endl;
 	return dataTestSet;
 }
+
+std::vector<lshbox::dataUnit> getlshDataset(FaceBase dataColletcion){
+		FaceBase::iterator iter;
+		std::vector<lshbox::dataUnit> dataSet;
+		for(iter = dataColletcion.begin(); iter != dataColletcion.end(); iter++){
+			vector_feature feature = iter->second;
+			for(int j = 0; j < feature.size(); j++){
+				dataSet.push_back(std::make_pair(feature[j].second.featureFace, feature[j].first));
+			}
+		}
+		return dataSet;
+}
+
 /************************以上测试map*********************************/
 int main(int argc, char* argv[]){
 	faceAnalysis faceInfernece;
@@ -58,6 +75,7 @@ int main(int argc, char* argv[]){
 	baseface.generateBaseFeature(faceInfernece);
 #else
 	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(facefeaturefile);
+
 	#ifdef KDTREE_SEARCH
 	std::map<int, KDtype >trainData;
 	FaceBase::iterator iter;
@@ -81,6 +99,28 @@ int main(int argc, char* argv[]){
 	KDtreeNode *female_kdtree = new KDtreeNode;
 	buildKdtree(male_kdtree, trainData.find(0)->second, 0);
 	buildKdtree(female_kdtree, trainData.find(1)->second, 0);
+	#endif
+	#ifdef LSH_SEARCH
+	lshbox::featureUnit lshgoal;
+	std::vector<lshbox::dataUnit> lshDataSet = getlshDataset(dataColletcion);
+	std::string file = "lsh.binary";
+	bool use_index = false;
+    lshbox::PSD_VECTOR_LSH<float> mylsh;
+    if (use_index)
+    {
+        mylsh.load(file);
+    }else{
+        lshbox::PSD_VECTOR_LSH<float>::Parameter param;
+        param.M = 521;
+        param.L = 5;
+        param.D = 512;
+        param.T = GAUSSIAN;
+        param.W = 0.5;
+		mylsh.reset(param);
+        mylsh.hash(lshDataSet);
+        mylsh.save(file);
+    }
+    lshbox::Metric<float> metric(512, L2_DIST);
 	#endif
 	KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
     /**********************初始化跟踪******************/
@@ -117,23 +157,35 @@ int main(int argc, char* argv[]){
 					resutTrack.push_back(trackBoxInfo);//获取跟踪信息
 					*/ 
 					encodeFeature detFeature = result[ii].faceFeature;
-					#if KDTREE_SEARCH //loop search
+					#ifdef KDTREE_SEARCH //kdtree search
 					std::pair<float, std::string > nearestNeighbor;
 					if(result[ii].faceAttri.gender==0)
 						nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, male_kdtree);
-					else
-					{
+					else{
 						nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, female_kdtree);	
 					}
 					person = nearestNeighbor.second;
-					#else //kdtree search
+					if(nearestNeighbor.first > euclideanValueThresold){
+						person = "unknown man";
+					}
+					#endif
+					#ifdef LSH_SEARCH//loop search
 					std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
              															detFeature, result[ii].faceAttri.gender);
 					person = nearestNeighbor.second;
-					#endif
 					if(nearestNeighbor.first < cosValueThresold){
 						person = "unknown man";
 					}
+					#endif
+					#ifdef LSH_SEARCH
+					lshgoal = result[ii].faceFeature.featureFace;
+					std::pair<float, std::string>nearestNeighbor = mylsh.query(lshgoal, metric, lshDataSet);
+					person = nearestNeighbor.second;
+					if(nearestNeighbor.first > euclideanValueThresold){
+						person = "unknown man";
+					}
+					#endif
+					
 				}
 				box detBox = result[ii].faceBox;
                 cv::rectangle( frame, cv::Point( detBox.xmin, detBox.ymin ), 

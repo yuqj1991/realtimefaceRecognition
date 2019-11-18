@@ -177,8 +177,8 @@ static modelParameter detParam ={
     {103.94, 116.78, 123.68}
 };
 static modelParameter attriParam ={
-    .m_model_weight_ = "../model/facelandmark.caffemodel",
-    .m_model_prototxt_ = "../model/facelandmark.prototxt",
+    .m_model_weight_ = "../model/face_attributes.caffemodel",
+    .m_model_prototxt_ = "../model/face_attributes.prototxt",
     .m_std_value_ = 0.007845,
     {127.5, 127.5, 127.5}
 };
