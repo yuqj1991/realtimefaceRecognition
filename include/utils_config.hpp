@@ -7,7 +7,7 @@
 #include <string>
 #include <stdlib.h>
 #include <assert.h>
-const float cosValueThresold = 0.65f;
+const float cosValueThresold = 0.55f;
 const float euclideanValueThresold = 1.20f;
 
 typedef struct modelParameter_{

@@ -19,9 +19,9 @@
 using namespace cv;
 using namespace RESIDEO;
 
-#define KDTREE_SEARCH
+//#define KDTREE_SEARCH
 //#define LSH_SEARCH
-//#define LOOP_SEARCH
+#define LOOP_SEARCH
 
 mapFaceCollectDataSet getmapDatafaceBase(FaceBase &dataColletcion){
 	mapFaceCollectDataSet dataTestSet;
@@ -169,7 +169,7 @@ int main(int argc, char* argv[]){
 						person = "unknown man";
 					}
 					#endif
-					#ifdef LSH_SEARCH//loop search
+					#ifdef LOOP_SEARCH//loop search
 					std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
              															detFeature, result[ii].faceAttri.gender);
 					person = nearestNeighbor.second;
