@@ -1,7 +1,7 @@
-#include "tracker.h"
-#include "nn_matching.h"
+#include "sorttracker.h"
+#include "sort/nn_matching.h"
 #include "../DeepAppearanceDescriptor/model.h"
-#include "linear_assignment.h"
+#include "sort/linear_assignment.h"
 using namespace std;
 
 //#define MY_inner_DEBUG

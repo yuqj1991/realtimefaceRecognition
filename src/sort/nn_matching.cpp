@@ -1,4 +1,4 @@
-#include "nn_matching.h"
+#include "sort/nn_matching.h"
 
 
 using namespace Eigen;
@@ -131,7 +131,6 @@ NearNeighborDisMetric::_cosine_distance(
     const FEATURESS & a,
     const FEATURESS& b, bool data_is_normalized) {
   if(data_is_normalized == true) {
-      //undo:
       assert(false);
     }
   MatrixXf res = 1. - (a*b.transpose()).array();

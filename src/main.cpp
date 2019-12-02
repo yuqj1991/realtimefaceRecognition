@@ -19,11 +19,7 @@
 using namespace cv;
 using namespace RESIDEO;
 
-//#define KDTREE_SEARCH
-//#define LSH_SEARCH
-#define LOOP_SEARCH
-
-#
+int trackingGap = 60;
 
 mapFaceCollectDataSet getmapDatafaceBase(FaceBase &dataColletcion){
 	mapFaceCollectDataSet dataTestSet;
@@ -71,7 +67,6 @@ std::vector<lshbox::dataUnit> getlshDataset(FaceBase dataColletcion){
 /************************以上测试map*********************************/
 int main(int argc, char* argv[]){
 	faceAnalysis faceInfernece;
-
 	dataBase baseface(faceDir, facefeaturefile);
 #if 0
 	baseface.generateBaseFeature(faceInfernece);
@@ -143,23 +138,15 @@ int main(int argc, char* argv[]){
 		int width = frame.cols;
 		int height = frame.rows;
 		int nDataBaseSize = 0;
-		if(FrameIdx % 1 == 0){
+		if(FrameIdx % trackingGap == 0){
 			resutTrack.clear();
 			std::vector<faceAnalysisResult> result= faceInfernece.faceInference(frame, detMargin, 20.0f);
 			string person = "unknown man";
 			
 			for(int ii = 0; ii < result.size(); ii++){
 				if(result[ii].haveFeature){
-					/*
-					detBoxInfo trackBoxInfo;
-					trackBoxInfo.detBox.xmin = xmin;
-					trackBoxInfo.detBox.xmax = xmax;
-					trackBoxInfo.detBox.ymin = ymin;
-					trackBoxInfo.detBox.ymax = ymax;
-					resutTrack.push_back(trackBoxInfo);//获取跟踪信息
-					*/ 
 					encodeFeature detFeature = result[ii].faceFeature;
-					#ifdef KDTREE_SEARCH //kdtree search
+					#ifdef KDTREE_SEARCH
 					std::pair<float, std::string > nearestNeighbor;
 					if(result[ii].faceAttri.gender==0)
 						nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, male_kdtree);
@@ -171,7 +158,7 @@ int main(int argc, char* argv[]){
 						person = "unknown man";
 					}
 					#endif
-					#ifdef LOOP_SEARCH//loop search
+					#ifdef LOOP_SEARCH
 					std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
              															detFeature, result[ii].faceAttri.gender);
 					person = nearestNeighbor.second;
@@ -187,15 +174,23 @@ int main(int argc, char* argv[]){
 						person = "unknown man";
 					}
 					#endif
-					
+					#ifdef USE_TRACKING
+					detBoxInfo trackBoxInfo;
+					trackBoxInfo.detBox.xmin = result[ii].faceBox.xmin;
+					trackBoxInfo.detBox.xmax = result[ii].faceBox.xmax;
+					trackBoxInfo.detBox.ymin = result[ii].faceBox.ymin;
+					trackBoxInfo.detBox.ymax = result[ii].faceBox.ymax;
+					trackBoxInfo.name = person;
+					resutTrack.push_back(trackBoxInfo);
+					#endif
 				}
+				#if DEBUG
 				box detBox = result[ii].faceBox;
                 cv::rectangle( frame, cv::Point( detBox.xmin, detBox.ymin ), 
 											cv::Point( detBox.xmax, detBox.ymax), 
 															cv::Scalar( 0, 255, 255 ), 1, 8 );
 				cv::putText(frame, person.c_str(), cv::Point( detBox.xmin, detBox.ymin ), 
 					cv::FONT_HERSHEY_COMPLEX, 1, Scalar(0, 255, 255), 2, 8, 0);
-				#if DEBUG
 				cv::Mat roiImage = frame(cv::Rect(detBox.xmin, detBox.ymin, detBox.xmax - detBox.xmin, detBox.ymax - detBox.ymin));
 				for(unsigned i = 0; i < 5; i++){
 					cv::circle(roiImage, cv::Point(result[ii].faceAttri.landmarks[i].point_x, result[ii].faceAttri.landmarks[i].point_y)
@@ -207,7 +202,7 @@ int main(int argc, char* argv[]){
 				#endif
 			}
 		}else{
-			for(int ii = 0; ii <resutTrack.size(); ii++){//跟踪
+			for(int ii = 0; ii <resutTrack.size(); ii++){//tracking
 				int xMin = resutTrack[ii].detBox.xmin;
 				int yMin = resutTrack[ii].detBox.ymin;
 				int width_ = resutTrack[ii].detBox.xmax - resutTrack[ii].detBox.xmin;
@@ -216,21 +211,26 @@ int main(int argc, char* argv[]){
 					tracker.init( Rect(xMin, yMin, width_, height_), frame );
 					rectangle( frame, Point( xMin, yMin ), Point( xMin+width_, yMin+height_), 
 													Scalar( 0, 255, 255 ), 1, 8 );
-				}else{// 更新位置信息
+				}else{// update position info
 					result = tracker.update(frame);
+					#if USE_TRACKING
 					rectangle( frame, Point( result.x, result.y ), 
 											Point( result.x+result.width, result.y+result.height), 
 															Scalar( 0, 255, 255 ), 1, 8 );
+					cv::putText(frame, resutTrack[ii].name, cv::Point( result.x, result.y), 
+						cv::FONT_HERSHEY_COMPLEX, 1, Scalar(0, 255, 255), 2, 8, 0);
+					#endif
 				}
-			}
+				
+			}	
 			nFrames++;
 		}
+
 		FrameIdx++;
-		if(FrameIdx == 60){
+		if(FrameIdx == trackingGap){
 			FrameIdx = 0;
 			nFrames = 0;
 		}
-		
         imshow("faceRecognition",frame);
         if(waitKey(1) > 0)  
             stop = true;

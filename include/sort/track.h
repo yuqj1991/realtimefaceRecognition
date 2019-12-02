@@ -1,10 +1,10 @@
 #ifndef TRACK_H
 #define TRACK_H
 
-#include "../DeepAppearanceDescriptor/dataType.h"
+#include "sort/dataType.h"
 
-#include "kalmanfilter.h"
-#include "../DeepAppearanceDescriptor/model.h"
+#include "sort/kalmanfilter.h"
+#include "sort/model.h"
 
 class Track
 {

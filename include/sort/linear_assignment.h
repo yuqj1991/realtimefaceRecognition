@@ -1,7 +1,8 @@
 #ifndef LINEAR_ASSIGNMENT_H
 #define LINEAR_ASSIGNMENT_H
-#include "../DeepAppearanceDescriptor/dataType.h"
-#include "tracker.h"
+
+#include "sort/dataType.h"
+#include "sort/tracker.h"
 
 #define INFTY_COST 1e5
 class tracker;
