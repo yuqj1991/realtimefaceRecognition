@@ -81,16 +81,21 @@ namespace RESIDEO{
             .pitch = face_prediction_attributes[1],
             .roll = face_prediction_attributes[2]
         };
-        int gender_index=0; 
+        int gender_index=0, glass_index = 0; 
         float gender_temp=0.0, glasses_temp=0.0;
         for(int jj=0; jj<2; jj++){
             if(gender_temp<face_prediction_attributes[jj +3]){
                 gender_index = jj;
                 gender_temp = face_prediction_attributes[jj + 3];
             }
+            if(glasses_temp<face_prediction_attributes[jj +5]){
+                glass_index = jj;
+                glasses_temp = face_prediction_attributes[jj + 5];
+            }
         }
         faceattribute detection = {
             .gender = gender_index,
+            .glass = glass_index,
             .landmarks = landmarks,
             .facepose = ang
         };

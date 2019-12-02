@@ -38,6 +38,7 @@ typedef struct Angle_{
 
 typedef struct faceAttri_{
     int gender;
+    int glass;
     std::vector<point> landmarks;
     angle facepose;
 }faceattribute;
@@ -177,8 +178,8 @@ static modelParameter detParam ={
     {103.94, 116.78, 123.68}
 };
 static modelParameter attriParam ={
-    .m_model_weight_ = "../model/face_attributes.caffemodel",
-    .m_model_prototxt_ = "../model/face_attributes.prototxt",
+    .m_model_weight_ = "../model/face_attributes_glass.caffemodel",
+    .m_model_prototxt_ = "../model/face_attributes_glass.prototxt",
     .m_std_value_ = 0.007845,
     {127.5, 127.5, 127.5}
 };
@@ -192,6 +193,7 @@ static modelParameter facenetParam ={
 static int detMargin = 32;
 static float confidencethreold = 0.35;
 static char *labelGender[] = {"male", "female"};
+static char *labelGlass[] = {"wearing glasses", "not wearing glasses"};
 /****************初始化跟踪模块***********************/
 static bool HOG = true;
 static bool FIXEDWINDOW = false;

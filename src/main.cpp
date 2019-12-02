@@ -192,7 +192,17 @@ int main(int argc, char* argv[]){
 											cv::Point( detBox.xmax, detBox.ymax), 
 															cv::Scalar( 0, 255, 255 ), 1, 8 );
 				cv::putText(frame, person.c_str(), cv::Point( detBox.xmin, detBox.ymin ), 
-					cv::FONT_HERSHEY_COMPLEX, 2, Scalar(0, 255, 255), 2, 8, 0);
+					cv::FONT_HERSHEY_COMPLEX, 1, Scalar(0, 255, 255), 2, 8, 0);
+				#if 1
+				cv::Mat roiImage = frame(cv::Rect(detBox.xmin, detBox.ymin, detBox.xmax - detBox.xmin, detBox.ymax - detBox.ymin));
+				for(unsigned i = 0; i < 5; i++){
+					cv::circle(roiImage, cv::Point(result[ii].faceAttri.landmarks[i].point_x, result[ii].faceAttri.landmarks[i].point_y)
+								, 3, cv::Scalar(0, 0, 213), -1);
+				}
+				std::string title = labelGender[result[ii].faceAttri.gender] + std::string(", ") + labelGlass[result[ii].faceAttri.glass];
+				cv::putText(frame, title, cv::Point( detBox.xmin + 40, detBox.ymin + 40 ), 
+					cv::FONT_ITALIC, 0.6, Scalar(0, 255, 0), 1);
+				#endif
 			}
 		}else{
 			for(int ii = 0; ii <resutTrack.size(); ii++){//跟踪
