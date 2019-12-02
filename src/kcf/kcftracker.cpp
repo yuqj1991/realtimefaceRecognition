@@ -4,11 +4,11 @@
 */
 
 #ifndef _KCFTRACKER_HEADERS
-#include "kcftracker.hpp"
-#include "ffttools.hpp"
-#include "recttools.hpp"
-#include "fhog.hpp"
-#include "labdata.hpp"
+#include "kcf/kcftracker.hpp"
+#include "kcf/ffttools.hpp"
+#include "kcf/recttools.hpp"
+#include "kcf/fhog.hpp"
+#include "kcf/labdata.hpp"
 #endif
 
 namespace RESIDEO{

@@ -1,19 +1,18 @@
-#include "reId.hpp"
+#include "faceAnalysis/faceRecong.hpp"
 
 using namespace cv;
 using namespace std;
 
 namespace RESIDEO{
 
-    reID::reID(modelParameter &param):objectbase(param){
+    Facenet::Facenet(modelParameter &param):objectbase(param){
         init_net();
         Blob<float>* input_layer = net_->input_blobs()[0];
         m_num_channels_ = input_layer->channels();
         m_input_geometry_ = cv::Size(input_layer->width(), input_layer->height());
-        mapFeatureIndex = 0;
     }
 
-    void reID::WrapInputLayer(std::vector<cv::Mat>* input_channels) {
+    void Facenet::WrapInputLayer(std::vector<cv::Mat>* input_channels) {
         Blob<float>* input_layer = net_->input_blobs()[0];
         int width = input_layer->width();
         int height = input_layer->height();
@@ -25,7 +24,7 @@ namespace RESIDEO{
         }
     }
 
-    void reID::Preprocess(cv::Mat& img,
+    void Facenet::Preprocess(cv::Mat& img,
                             std::vector<cv::Mat>* input_channels) {
         cv::Mat sample;
         if (img.channels() == 3 && m_num_channels_ == 1)
@@ -52,7 +51,7 @@ namespace RESIDEO{
             -m_model_parameter.m_mean_value_[0] * m_model_parameter.m_std_value_);
         cv::split(sample_float, *input_channels);
     }
-    std::vector<float> reID::Predict(cv::Mat &inputImg){
+    encodeFeature Facenet::Predict(cv::Mat &inputImg){
         Blob<float>* input_layer = net_->input_blobs()[0];
         input_layer->Reshape(1, m_num_channels_,
                         m_input_geometry_.height, m_input_geometry_.width);
@@ -64,9 +63,9 @@ namespace RESIDEO{
         Blob<float>* output_layer = net_->output_blobs()[0];
         const float* result = output_layer->cpu_data();
 
-        std::vector<float> featurerawFace, normface;
+        encodeFeature featurerawFace, normface;
         for(int ii=0; ii<512; ii++){
-            featurerawFace.push_back(result[ii]);
+            featurerawFace.featureFace.push_back(result[ii]);
         }
         normface = normL2Vector(featurerawFace);
         return normface;

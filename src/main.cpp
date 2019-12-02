@@ -6,8 +6,8 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "faceAnalysis.hpp"
-#include "kcftracker.hpp"
+#include "faceAnalysis/faceAnalysis.hpp"
+#include "kcf/kcftracker.hpp"
 #include "utils_config.hpp"
 #include "dataBase.hpp"
 #include "kdtree.hpp"
@@ -22,6 +22,8 @@ using namespace RESIDEO;
 //#define KDTREE_SEARCH
 //#define LSH_SEARCH
 #define LOOP_SEARCH
+
+#
 
 mapFaceCollectDataSet getmapDatafaceBase(FaceBase &dataColletcion){
 	mapFaceCollectDataSet dataTestSet;
@@ -193,7 +195,7 @@ int main(int argc, char* argv[]){
 															cv::Scalar( 0, 255, 255 ), 1, 8 );
 				cv::putText(frame, person.c_str(), cv::Point( detBox.xmin, detBox.ymin ), 
 					cv::FONT_HERSHEY_COMPLEX, 1, Scalar(0, 255, 255), 2, 8, 0);
-				#if 1
+				#if DEBUG
 				cv::Mat roiImage = frame(cv::Rect(detBox.xmin, detBox.ymin, detBox.xmax - detBox.xmin, detBox.ymax - detBox.ymin));
 				for(unsigned i = 0; i < 5; i++){
 					cv::circle(roiImage, cv::Point(result[ii].faceAttri.landmarks[i].point_x, result[ii].faceAttri.landmarks[i].point_y)

@@ -1,6 +1,6 @@
 #ifndef _RESIDEO_KDTREE_H_
 #define _RESIDEO_KDTREE_H_
-#include "faceAnalysis.hpp"
+#include "faceAnalysis/faceAnalysis.hpp"
 #include <string.h>
 #include <iostream>
 #include <fstream>

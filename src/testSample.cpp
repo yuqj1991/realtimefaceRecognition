@@ -6,8 +6,8 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "faceAnalysis.hpp"
-#include "kcftracker.hpp"
+#include "faceAnalysis/faceAnalysis.hpp"
+#include "kcf/kcftracker.hpp"
 #include "utils_config.hpp"
 #include "dataBase.hpp"
 #include "kdtree.hpp"

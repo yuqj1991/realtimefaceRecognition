@@ -5,7 +5,7 @@
 
 //Modified from latentsvm module's "lsvmc_featurepyramid.cpp".
 
-#include "fhog.hpp"
+#include "kcf/fhog.hpp"
 
 
 #ifdef HAVE_TBB

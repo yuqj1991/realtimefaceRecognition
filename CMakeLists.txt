@@ -25,36 +25,33 @@ include_directories(${CUDA_INCLUDE_DIRS})
 #ADD_DEFINITIONS(-DCPU_ONLY=0)
 ADD_DEFINITIONS(-DUSE_CUDNN=1)
 ADD_DEFINITIONS(-DDEBUG=1)
+ADD_DEFINITIONS(-DLOOP_SEARCH=1)
+#ADD_DEFINITIONS(-DLSH_SEARCH=1)
+#ADD_DEFINITIONS(-DKDTREE_SEARCH=1)
+
 
 SET(detour_SRCS
-	src/faceAttri.cpp
-	src/faceRecong.cpp
-	src/fhog.cpp
-	src/kcftracker.cpp
-	src/objectbase.cpp
-	src/objectDetect.cpp
-	src/dataBase.cpp
-	src/faceAnalysis.cpp
 	src/Point.cpp
+	src/dataBase.cpp
+	src/kcf/fhog.cpp
+	src/kcf/kcftracker.cpp
+	src/faceAnalysis/faceAttri.cpp
+	src/faceAnalysis/faceRecong.cpp
+	src/faceAnalysis/objectbase.cpp
+	src/faceAnalysis/objectDetect.cpp
+	src/faceAnalysis/reId.cpp
+	src/faceAnalysis/faceAnalysis.cpp
 )
 SET(detour_HDRS
-	include/faceAttri.hpp
-	include/faceRecong.hpp
-	include/fhog.hpp
-	include/ffttools.hpp
-	include/kcftracker.hpp
-	include/labdata.hpp
-	include/objectDetect.hpp
-	include/objectbase.hpp
-	include/recttools.hpp
-	include/tracker.h
+	include/Point.hpp
 	include/utils_config.hpp
 	include/dataBase.hpp
-	include/faceAnalysis.hpp
 	include/kdtree.hpp
-	include/Point.hpp
+	include/lshbox.h
+	include/faceAnalysis
 	include/eigen
 	include/lshbox
+	include/kcf
 )
 
 add_library(faceInference SHARED ${detour_SRCS} ${detour_HDRS})
