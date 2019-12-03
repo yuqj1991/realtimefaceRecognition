@@ -3,6 +3,8 @@
 
 using namespace Eigen;
 
+int featureDim = 512;
+
 NearNeighborDisMetric::NearNeighborDisMetric(
     NearNeighborDisMetric::METRIC_TYPE metric,
     float matching_threshold, int budget)
@@ -54,28 +56,28 @@ NearNeighborDisMetric::partial_fit(
           int newSize = oldSize + addSize;
 
           if(newSize <= this->budget) {
-              FEATURESS newSampleFeatures(newSize, 128);
-              newSampleFeatures.block(0,0, oldSize, 128) = samples[track_id];
-              newSampleFeatures.block(oldSize, 0, addSize, 128) = newFeatOne;
+              FEATURESS newSampleFeatures(newSize, featureDim);
+              newSampleFeatures.block(0,0, oldSize, featureDim) = samples[track_id];
+              newSampleFeatures.block(oldSize, 0, addSize, featureDim) = newFeatOne;
               samples[track_id] = newSampleFeatures;
             } else {
               if(oldSize < this->budget) {//original space is not enough;
-                  FEATURESS newSampleFeatures(this->budget, 128);
+                  FEATURESS newSampleFeatures(this->budget, featureDim);
                   if(addSize >= this->budget) {
-                      newSampleFeatures = newFeatOne.block(0, 0, this->budget, 128);
+                      newSampleFeatures = newFeatOne.block(0, 0, this->budget, featureDim);
                     } else {
-                      newSampleFeatures.block(0, 0, this->budget-addSize, 128) =
-                          samples[track_id].block(addSize-1, 0, this->budget-addSize, 128).eval();
-                      newSampleFeatures.block(this->budget-addSize, 0, addSize, 128) = newFeatOne;
+                      newSampleFeatures.block(0, 0, this->budget-addSize, featureDim) =
+                          samples[track_id].block(addSize-1, 0, this->budget-addSize, featureDim).eval();
+                      newSampleFeatures.block(this->budget-addSize, 0, addSize, featureDim) = newFeatOne;
                     }
                   samples[track_id] = newSampleFeatures;
                 } else {//original space is ok;
                   if(addSize >= this->budget) {
-                      samples[track_id] = newFeatOne.block(0,0, this->budget, 128);
+                      samples[track_id] = newFeatOne.block(0,0, this->budget, featureDim);
                     } else {
-                      samples[track_id].block(0, 0, this->budget-addSize, 128) =
-                          samples[track_id].block(addSize-1, 0, this->budget-addSize, 128).eval();
-                      samples[track_id].block(this->budget-addSize, 0, addSize, 128) = newFeatOne;
+                      samples[track_id].block(0, 0, this->budget-addSize, featureDim) =
+                          samples[track_id].block(addSize-1, 0, this->budget-addSize, featureDim).eval();
+                      samples[track_id].block(this->budget-addSize, 0, addSize, featureDim) = newFeatOne;
                     }
                 }
             }

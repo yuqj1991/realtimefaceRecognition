@@ -1,5 +1,5 @@
 #include "sort/linear_assignment.h"
-#include "../MunkresAssignment/hungarianoper.h"
+#include "munkresAssignment/hungarianoper.h"
 #include <map>
 
 linear_assignment *linear_assignment::instance = NULL;

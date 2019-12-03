@@ -11,7 +11,6 @@ typedef Eigen::Matrix<float, 1, 4, Eigen::RowMajor> DETECTBOX;
 typedef Eigen::Matrix<float, -1, 4, Eigen::RowMajor> DETECTBOXSS;
 typedef Eigen::Matrix<float, 1, 512, Eigen::RowMajor> FEATURE;
 typedef Eigen::Matrix<float, Eigen::Dynamic, 512, Eigen::RowMajor> FEATURESS;
-//typedef std::vector<FEATURE> FEATURESS;
 
 //Kalmanfilter
 //typedef Eigen::Matrix<float, 8, 8, Eigen::RowMajor> KAL_FILTER;

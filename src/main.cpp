@@ -119,12 +119,11 @@ int main(int argc, char* argv[]){
     }
     lshbox::Metric<float> metric(512, L2_DIST);
 	#endif
-	KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
+	std::vector<KCFTracker> trackerVector;
     /**********************初始化跟踪******************/
 	Mat frame;
 	Rect result;
 	int FrameIdx = 0;
-	int nFrames = 0;
 	VideoCapture cap(0);  
     if(!cap.isOpened())  
     {  
@@ -141,8 +140,7 @@ int main(int argc, char* argv[]){
 		if(FrameIdx % trackingGap == 0){
 			resutTrack.clear();
 			std::vector<faceAnalysisResult> result= faceInfernece.faceInference(frame, detMargin, 20.0f);
-			string person = "unknown man";
-			
+			string person = "unknown man";	
 			for(int ii = 0; ii < result.size(); ii++){
 				if(result[ii].haveFeature){
 					encodeFeature detFeature = result[ii].faceFeature;
@@ -202,17 +200,26 @@ int main(int argc, char* argv[]){
 				#endif
 			}
 		}else{
-			for(int ii = 0; ii <resutTrack.size(); ii++){//tracking
-				int xMin = resutTrack[ii].detBox.xmin;
-				int yMin = resutTrack[ii].detBox.ymin;
-				int width_ = resutTrack[ii].detBox.xmax - resutTrack[ii].detBox.xmin;
-				int height_ = resutTrack[ii].detBox.ymax - resutTrack[ii].detBox.ymin;
-				if (nFrames == 0) {
+			if(FrameIdx == 1){
+				trackerVector.clear();
+				for(int ii = 0; ii <resutTrack.size(); ii++){//tracking
+					int xMin = resutTrack[ii].detBox.xmin;
+					int yMin = resutTrack[ii].detBox.ymin;
+					int width_ = resutTrack[ii].detBox.xmax - resutTrack[ii].detBox.xmin;
+					int height_ = resutTrack[ii].detBox.ymax - resutTrack[ii].detBox.ymin;
+					KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
 					tracker.init( Rect(xMin, yMin, width_, height_), frame );
+					#if USE_TRACKING
 					rectangle( frame, Point( xMin, yMin ), Point( xMin+width_, yMin+height_), 
 													Scalar( 0, 255, 255 ), 1, 8 );
-				}else{// update position info
-					result = tracker.update(frame);
+					cv::putText(frame, resutTrack[ii].name, cv::Point( result.x, result.y), 
+							cv::FONT_HERSHEY_COMPLEX, 1, Scalar(0, 255, 255), 2, 8, 0);
+					#endif
+					trackerVector.push_back(tracker);
+				}
+			}else{
+				for(int ii = 0; ii <resutTrack.size(); ii++){
+					result = trackerVector[ii].update(frame);
 					#if USE_TRACKING
 					rectangle( frame, Point( result.x, result.y ), 
 											Point( result.x+result.width, result.y+result.height), 
@@ -221,15 +228,11 @@ int main(int argc, char* argv[]){
 						cv::FONT_HERSHEY_COMPLEX, 1, Scalar(0, 255, 255), 2, 8, 0);
 					#endif
 				}
-				
-			}	
-			nFrames++;
+			}
 		}
-
 		FrameIdx++;
 		if(FrameIdx == trackingGap){
 			FrameIdx = 0;
-			nFrames = 0;
 		}
         imshow("faceRecognition",frame);
         if(waitKey(1) > 0)  

@@ -13,7 +13,6 @@ public:
             float matching_threshold,
             int budget);
     DYNAMICM distance(const FEATURESS& features, const std::vector<int> &targets);
-    //    void partial_fit(FEATURESS& features, std::vector<int> targets, std::vector<int> active_targets);
     void partial_fit(std::vector<TRACKER_DATA>& tid_feats, std::vector<int>& active_targets);
     float mating_threshold;
 
