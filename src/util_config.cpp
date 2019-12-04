@@ -1,14 +1,14 @@
 #include "utils_config.hpp"
-
+#include<opencv2/opencv.hpp>
 namespace RESIDEO{
     float util::computeDistance(const Prediction leftValue, const Prediction &rightValue, 
-                                unsigned int method){
+                                unsigned int method, int featureDim){
         float top =0.0f, bottomLeft=0.0f, bottomRight=0.0f, euclideanValue = 0.0f;
 
         assert(leftValue.size()==rightValue.size());
-        assert(leftValue.size() == 512);
+        assert(leftValue.size() == featureDim);
 
-        for(int ii = 0; ii < 512; ii++){
+        for(int ii = 0; ii < featureDim; ii++){
             top += leftValue[ii]*rightValue[ii];
             bottomLeft += leftValue[ii]*leftValue[ii];
             bottomRight += rightValue[ii]*rightValue[ii];
@@ -37,8 +37,7 @@ namespace RESIDEO{
         if(dataColletcion.find(gender)!=dataColletcion.end()){
             vector_feature subFaceDataSet = dataColletcion.find(gender)->second;
             for(unsigned nn = 0; nn<subFaceDataSet.size(); nn++){
-                comDist = computeDistance(feature.featureFace, subFaceDataSet[nn].second.featureFace, 1);
-                //printf("nn: %d, cosDis: %f, dataset name: %s\n", nn, comDist, subFaceDataSet[nn].first.c_str());
+                comDist = computeDistance(feature.featureFace, subFaceDataSet[nn].second.featureFace, 1, feature.featureFace.size());
                 if(maxDist < comDist){
                     result.second = subFaceDataSet[nn].first;
                     result.first = comDist;
@@ -127,6 +126,5 @@ namespace RESIDEO{
         MULTISCALE = true;
         LAB = false;
         nn_budget = 100;
-        max_cosine_distance = 0.2f;
     }
 }

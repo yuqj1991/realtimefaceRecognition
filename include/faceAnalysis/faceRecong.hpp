@@ -26,7 +26,6 @@ namespace RESIDEO{
             void Preprocess(cv::Mat& img, std::vector<cv::Mat>* input_channels);
             encodeFeature Predict(cv::Mat &inputImg);
             inline encodeFeature normL2Vector(encodeFeature en_feature){
-                assert(en_feature.featureFace.size() == 512);
                 float sum_vector = 0.f;
                 for(unsigned i = 0; i < en_feature.featureFace.size(); i++){
                     sum_vector += std::pow(en_feature.featureFace[i], 2);

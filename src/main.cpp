@@ -86,6 +86,18 @@ void postprocess(std::vector<output>& outs,DETECTIONS& d){
 		get_detections(DETECTBOX(box.second.xmin, box.second.ymin, width, height),box.first,d);
 	}
 }
+
+std::vector<float> getHogFeatureMap(cv::Mat mattmp){
+        cv::resize(mattmp, mattmp, cv::Size(64, 128));
+		Mat dst_gray;
+		cvtColor(mattmp, dst_gray, CV_BGR2GRAY);
+	
+		HOGDescriptor detector(Size(64, 128), Size(16, 16), Size(8, 8), Size(8, 8), 9);
+		vector<float> descriptor;
+		vector<Point> location;
+		detector.compute(dst_gray, descriptor, Size(0, 0), Size(0, 0),location);
+		return descriptor;
+}
 #endif
 
 int trackingGap = 60;
@@ -103,9 +115,11 @@ int main(int argc, char* argv[]){
 	#endif
 #else
 	#ifdef USE_KCF_TRACKING
-	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParam.facefeaturefile, 512);
+	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParam.facefeaturefile, 
+														configParam.facefeatureDim);
 	#else
-	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParam.HOGfacefeaturefile, 3780);
+	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParam.HOGfacefeaturefile, 
+													configParam.faceHOGfeatureDim);
 	#endif
 	#ifdef KDTREE_SEARCH
 	std::map<int, KDtype >trainData;
@@ -144,21 +158,21 @@ int main(int argc, char* argv[]){
         lshbox::PSD_VECTOR_LSH<float>::Parameter param;
         param.M = 521;
         param.L = 5;
-        param.D = 512;
+        param.D = configParam.facefeatureDim;
         param.T = GAUSSIAN;
         param.W = 0.5;
 		mylsh.reset(param);
         mylsh.hash(lshDataSet);
         mylsh.save(file);
     }
-    lshbox::Metric<float> metric(512, L2_DIST);
+    lshbox::Metric<float> metric(configParam.facefeatureDim, L2_DIST);
 	#endif
 	/**********************初始化跟踪******************/
 	#ifdef USE_KCF_TRACKING
 	std::vector<KCFTracker> trackerVector;
 	RecognResultTrack resutTrack;
 	#else
-	tracker DeepSortTracker(configParam.max_cosine_distance, configParam.nn_budget);
+	tracker DeepSortTracker(configParam.cosValueThresold, configParam.nn_budget);
 	#endif
     /**********************while********************/
 	Mat frame;
@@ -279,7 +293,22 @@ int main(int argc, char* argv[]){
           	for(Track& track : DeepSortTracker.tracks) {
 				if(!track.is_confirmed() || track.time_since_update > 1)
 					continue;
-				result.push_back(std::make_pair(track.track_id, track.to_tlwh()));
+				DETECTBOX tmp = track.to_tlwh();
+				cv::Mat roiImage = frame(cv::Rect(tmp(0), tmp(1), tmp(2), tmp(3)));
+				std::vector<float>hogfeature = getHogFeatureMap(roiImage);
+
+				#ifdef LOOP_SEARCH
+				encodeFeature detFeature;
+				detFeature.featureFace = hogfeature;
+				std::pair<float, std::string>nearestNeighbor= configParam.serachCollectDataNameByloop(dataColletcion,
+																	detFeature, 0);
+				std::string person = nearestNeighbor.second;
+				if(nearestNeighbor.first < configParam.cosValueThresold){
+					person = "unknown man";
+				}
+				#endif
+
+				result.push_back(std::make_pair(person, track.to_tlwh()));
             }
           	for(unsigned n = 0; n < detections.size(); n++){
 				DETECTBOX tmpbox = detections[n].tlwh;
@@ -290,7 +319,7 @@ int main(int argc, char* argv[]){
 					DETECTBOX tmp = result[k].second;
 					cv::Rect rect = cv::Rect(tmp(0), tmp(1), tmp(2), tmp(3));
 					rectangle(frame, rect, cv::Scalar(255, 255, 0), 2);
-					std::string label = cv::format("%d", result[k].first);
+					std::string label = result[k].first;
 					cv::putText(frame, label, cv::Point(rect.x, rect.y), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 255, 0), 2);
 				}
             }

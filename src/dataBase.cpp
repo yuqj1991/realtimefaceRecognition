@@ -9,13 +9,13 @@ namespace RESIDEO{
     }
     std::vector<float> getHogFeatureMap(cv::Mat mattmp){
         cv::resize(mattmp, mattmp, cv::Size(64, 128));
-		Mat dst_gray;
-		cvtColor(mattmp, dst_gray, CV_BGR2GRAY);
+		cv::Mat dst_gray;
+		cv::cvtColor(mattmp, dst_gray, CV_BGR2GRAY);
 	
 		HOGDescriptor detector(Size(64, 128), Size(16, 16), Size(8, 8), Size(8, 8), 9);
 		vector<float> descriptor;
 		vector<Point> location;
-		detector.compute(dst_gray, descriptor, Size(0, 0), Size(0, 0),location);
+		detector.compute(dst_gray, descriptor, cv::Size(0, 0), Size(0, 0),location);
 		return descriptor;
     }
     void dataBase::generateBaseFeature(faceAnalysis faceRegister){
@@ -91,6 +91,8 @@ namespace RESIDEO{
                 std::vector<float> HOGfeature= getHogFeatureMap(RoiImg);
                 
                 outfile << RegisterName;
+                int gender = 0;
+                outfile << " "<< gender <<" ";
                 for(unsigned nn = 0; nn< HOGfeature.size(); nn++)
                     outfile << " "<<HOGfeature[nn];
             }
@@ -133,7 +135,7 @@ namespace RESIDEO{
             sstr.clear();
         }
         infile.close();
-        std::cout<<"male size: "<<base.find(0)->second.size() << ", female size: %d\n" << base.find(1)->second.size();
+        std::cout<<"male size: "<<base.find(0)->second.size() << ", female size: " << base.find(1)->second.size();
         return base;
     }
 

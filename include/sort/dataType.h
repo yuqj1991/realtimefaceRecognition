@@ -21,7 +21,7 @@ using KAL_DATA = std::pair<KAL_MEAN, KAL_COVA>;
 using KAL_HDATA = std::pair<KAL_HMEAN, KAL_HCOVA>;
 
 //main
-using RESULT_DATA = std::pair<int, DETECTBOX>;
+using RESULT_DATA = std::pair<std::string, DETECTBOX>;
 
 //tracker:
 using TRACKER_DATA = std::pair<int, FEATURESS>;

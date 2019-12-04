@@ -62,9 +62,10 @@ namespace RESIDEO{
         net_->Forward();
         Blob<float>* output_layer = net_->output_blobs()[0];
         const float* result = output_layer->cpu_data();
+        const int featureDim = output_layer->channels();
 
         encodeFeature featurerawFace, normface;
-        for(int ii=0; ii<512; ii++){
+        for(int ii=0; ii<featureDim; ii++){
             featurerawFace.featureFace.push_back(result[ii]);
         }
         normface = normL2Vector(featurerawFace);

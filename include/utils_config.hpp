@@ -67,10 +67,10 @@ namespace RESIDEO{
     struct featureCmp{
         bool operator()(const encodeFeature &leftValue, const encodeFeature &rightValue) const{
             float top =0.0f, bottomLeft=0.0f, bottomRight=0.0f, EuclideanValue = 0.0f;
-
+            int featureDim = 512;
             assert(leftValue.featureFace.size()==rightValue.featureFace.size());
-            assert(leftValue.featureFace.size() == 512);
-            for(int ii = 0; ii < 512; ii++){
+            assert(leftValue.featureFace.size() == featureDim);
+            for(int ii = 0; ii < featureDim; ii++){
                 top += leftValue.featureFace[ii]*rightValue.featureFace[ii];
                 bottomLeft += leftValue.featureFace[ii]*leftValue.featureFace[ii];
                 bottomRight += rightValue.featureFace[ii]*rightValue.featureFace[ii];
@@ -83,7 +83,7 @@ namespace RESIDEO{
             if(Euclidean <= 1.2){
                 return false;
             }else{
-                for(int ii = 0; ii < 512; ii++){
+                for(int ii = 0; ii < featureDim; ii++){
                     if(std::abs(leftValue.featureFace[ii])!=std::abs(rightValue.featureFace[ii]))
                         return std::abs(leftValue.featureFace[ii])>std::abs(rightValue.featureFace[ii]);
                 }
@@ -97,7 +97,7 @@ namespace RESIDEO{
         public:
         util();
         float computeDistance(const Prediction leftValue, const Prediction &rightValue, 
-                        unsigned int method);
+                        unsigned int method, int featureDim);
         std::pair<float, std::string>serachCollectDataNameByloop(FaceBase dataColletcion,
              encodeFeature feature, int gender);
         std::string serachCollectDataNameBymapSet(mapFaceCollectDataSet dataTestSet,
@@ -124,7 +124,8 @@ namespace RESIDEO{
         bool LAB;
         int nn_budget;
         float max_cosine_distance;
-
+        int facefeatureDim = 512;
+        int faceHOGfeatureDim = 3780;
     };
 }
 #endif

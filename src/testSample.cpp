@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
 #if 0
 	baseface.generateBaseFeature(faceInfernece);
 #else
-	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParamTest.facefeaturefile, 512);
+	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParamTest.facefeaturefile, configParamTest.facefeatureDim);
 
 	FaceBase dataSubset;
 	std::map<int, KDtype >trainData;
@@ -142,8 +142,7 @@ int main(int argc, char* argv[]){
 #endif
 
 /***********************lsh method*****************************************/
-#if 1
-	
+#ifdef LSH_SEARCH
 	lshbox::featureUnit lshgoal;
 	std::vector<lshbox::dataUnit> lshDataSet = getlshDataset(dataColletcion, lshgoal);
 	std::string file = "lsh.binary";
@@ -156,24 +155,15 @@ int main(int argc, char* argv[]){
         lshbox::PSD_VECTOR_LSH<float>::Parameter param;
         param.M = 521;
         param.L = 5;
-        param.D = 512;
+        param.D = configParamTest.facefeatureDim;
         param.T = GAUSSIAN;
         param.W = 0.5;
 		mylsh.reset(param);
         mylsh.hash(lshDataSet);
         mylsh.save(file);
     }
-	//lshbox::Matrix<float> metricData(lshDataSet, lshDataSet.size(), 512);
-	//lshbox::Matrix<float>::Accessor accessor(metricData);
-    lshbox::Metric<float> metric(512, L2_DIST);
+    lshbox::Metric<float> metric(configParamTest.facefeatureDim, L2_DIST);
     unsigned K = 1;
-    /*
-	lshbox::Scanner<lshbox::Matrix<float>::Accessor> scanner(
-        accessor,
-        metric,
-        K
-    );
-	*/
 	startTime = clock();//计时开始
 	std::pair<float, std::string>nearestNeighbor_lsh = mylsh.query(lshgoal, metric, lshDataSet);
 	endTime = clock();//计时结束

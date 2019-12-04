@@ -25,7 +25,6 @@ namespace RESIDEO{
             void Preprocess(cv::Mat& img, std::vector<cv::Mat>* input_channels);
             std::vector<float> Predict(cv::Mat &inputImg);
             inline vector<float> normL2Vector(vector<float> feature){
-                assert(feature.size() > 0);
                 float sum_vector = 0.f;
                 for(unsigned i = 0; i < feature.size(); i++){
                     sum_vector += std::pow(feature[i], 2);

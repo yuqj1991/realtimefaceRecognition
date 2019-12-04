@@ -61,6 +61,7 @@ struct KDtreeNode{
     KDtreeNode* rightChild;
     float splitvalue;
     unsigned splitDim;
+    int featureDim;
     //默认构造函数
     KDtreeNode(){parent = leftChild = rightChild = NULL;}
     //判断kd树是否为空
@@ -116,7 +117,6 @@ void buildKdtree(KDtreeNode* tree, KDtype points, unsigned depth){
     KDtype subset_right;
     tree->splitDim = splitAttribute;
     tree->splitvalue = splitValue;
-    
     for (unsigned i = 0; i < samplesNum; ++i){
         if (splitAttributeValues[i] == splitValue && tree->root.first.empty()){
             tree->root = points[i];
@@ -127,6 +127,7 @@ void buildKdtree(KDtreeNode* tree, KDtype points, unsigned depth){
                 subset_right.push_back(points[i]);
         }
     }
+    tree->featureDim = tree->root.first.size();
     /*******子集递归调用buildKDtreeNode函数*****************/
     tree->leftChild = new KDtreeNode;
     tree->leftChild->parent = tree;
@@ -140,7 +141,7 @@ void findNearestNode(Prediction goal, KDtreeNode *tree, float *Distance, std::st
     if(tree->isEmpty()){
         return;
     }
-    float computeDistance_ = kdtreeUtil.computeDistance(goal, tree->root.first, 0);
+    float computeDistance_ = kdtreeUtil.computeDistance(goal, tree->root.first, 0, tree->featureDim);
     if(*Distance >= computeDistance_){
         *Distance = computeDistance_;
         nearestName = tree->root.second;
@@ -189,7 +190,7 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
     近邻搜索；如果不相交，向上回退
     */
     //当前最近邻与目标点的距离
-    finalResult.first = kdtreeUtil.computeDistance(goal, currentNearest.first, 0);
+    finalResult.first = kdtreeUtil.computeDistance(goal, currentNearest.first, 0, tree->featureDim);
     finalResult.second = currentNearest.second;
     //如果当前子kd树的根结点是其父结点的左孩子，则搜索其父结点的右孩子结点所代表的区域，反之亦反
     KDtreeNode* searchDistrict;
@@ -210,7 +211,7 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
         //std::cout<<"districtDistance: "<<districtDistance<<std::endl;
         //如果“搜索区域与目标点的最近距离”比“当前最近邻与目标点的距离”短，表明搜索区域内可能存在距离目标点更近的点
         if (districtDistance < finalResult.first ){
-            float parentDistance = kdtreeUtil.computeDistance(goal, searchDistrict->parent->root.first, 0);
+            float parentDistance = kdtreeUtil.computeDistance(goal, searchDistrict->parent->root.first, 0, tree->featureDim);
             if (parentDistance < finalResult.first){
                 finalResult.first = parentDistance;
                 currentTree = searchDistrict->parent;
@@ -231,7 +232,7 @@ std::pair<float, std::string > searchNearestNeighbor(Prediction goal, KDtreeNode
             }
             #else
             if (!searchDistrict->isEmpty()){
-                float rootDistance = kdtreeUtil.computeDistance(goal, searchDistrict->root.first, 0);
+                float rootDistance = kdtreeUtil.computeDistance(goal, searchDistrict->root.first, 0, tree->featureDim);
                 if (rootDistance < finalResult.first){
                     finalResult.first = rootDistance;
                     currentTree = searchDistrict;
