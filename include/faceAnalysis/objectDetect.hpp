@@ -3,21 +3,15 @@
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
-#define USE_OPENCV 1
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #endif
 #include "objectbase.hpp"
 #include <algorithm>
-#include <iosfwd>
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-#include <map>
-#include <boost/shared_ptr.hpp>
 
 
 namespace RESIDEO{

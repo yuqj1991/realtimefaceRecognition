@@ -67,12 +67,40 @@ namespace RESIDEO{
         }
         return result;
     }
+
+    mapFaceCollectDataSet util::getmapDatafaceBase(FaceBase &dataColletcion){
+        mapFaceCollectDataSet dataTestSet;
+        FaceBase::iterator it;
+        for(it = dataColletcion.begin(); it != dataColletcion.end(); it++){
+            int gender = it->first;
+            vector_feature feature = it->second;
+            for(unsigned i = 0; i < feature.size(); i++){
+
+            }
+            mapFeature subfeature;
+            
+            if(dataTestSet.find(gender) == dataTestSet.end()){
+                for(unsigned j = 0; j < feature.size(); j++){
+                    subfeature.insert(std::make_pair(feature[j].second, feature[j].first));
+                }
+                dataTestSet.insert(std::make_pair(gender, subfeature));
+            }
+        }
+        int num = 0;
+        mapFaceCollectDataSet::iterator iter;
+        for(iter = dataTestSet.begin(); iter != dataTestSet.end(); iter++){
+            mapFeature subfeature = iter->second;
+            num += subfeature.size();
+        }
+        return dataTestSet;
+    }
     /******************初始化网络模型*************************/
     util::util(){
         cosValueThresold = 0.55f;
         euclideanValueThresold = 1.20f;
         faceDir = "../faceBase";
         facefeaturefile = "../savefeature.txt";
+        HOGfacefeaturefile = "../hogSaveFeature.txt";
         cropfaceDir = "../faceCropBase/";
         detParam ={
             .m_model_weight_ = "../model/face_detector.caffemodel",
@@ -92,12 +120,8 @@ namespace RESIDEO{
             .m_std_value_ = 0.007845,
             {127.5, 127.5, 127.5}
         };
-        /*****************static variables******************/
         detMargin = 32;
-        confidencethreold = 0.35;
-        labelGender[2] = {"male", "female"};
-        labelGlass[2] = {"wearing glasses", "not wearing glasses"};
-        /****************初始化跟踪模块***********************/
+        confidencethreold = 0.35f;
         HOG = true;
         FIXEDWINDOW = false;
         MULTISCALE = true;

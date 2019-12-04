@@ -1,8 +1,22 @@
 #include "dataBase.hpp"
+#ifdef USE_OPENCV
+#include<opencv2/opencv.hpp>
+#endif
 namespace RESIDEO{
-    dataBase::dataBase(string faceDir, string saveFeatureFile):m_BaseDir(configParam.faceDir), 
+    dataBase::dataBase(string faceDir, string saveFeatureFile):m_BaseDir(faceDir), 
                     m_faceFile(saveFeatureFile)
     {
+    }
+    std::vector<float> getHogFeatureMap(cv::Mat mattmp){
+        cv::resize(mattmp, mattmp, cv::Size(64, 128));
+		Mat dst_gray;
+		cvtColor(mattmp, dst_gray, CV_BGR2GRAY);
+	
+		HOGDescriptor detector(Size(64, 128), Size(16, 16), Size(8, 8), Size(8, 8), 9);
+		vector<float> descriptor;
+		vector<Point> location;
+		detector.compute(dst_gray, descriptor, Size(0, 0), Size(0, 0),location);
+		return descriptor;
     }
     void dataBase::generateBaseFeature(faceAnalysis faceRegister){
         std::vector<string> filenames;
@@ -49,7 +63,43 @@ namespace RESIDEO{
         outfile.close();
     }
 
-    FaceBase dataBase::getStoredDataBaseFeature(std::string basefeaturefile){
+    void dataBase::generateBaseHOGFeature(faceAnalysis faceRegister){
+        std::vector<string> filenames;
+	    GetFileNames(m_BaseDir,filenames);
+        std::cout<<"total base: "<<filenames.size()<<endl;
+        std::ofstream outfile;
+        outfile.open(configParam.HOGfacefeaturefile, ios::out|ios::trunc);
+        outfile.clear();
+        for(unsigned i = 0; i < filenames.size(); i++){
+            std::cout<<"****image name: "<<filenames[i]<<std::endl;
+            cv::Mat image = cv::imread(filenames[i]);
+            if (!image.data)
+            {
+                printf("No image data\n");
+                return ;
+            }
+            std::vector<output> result = faceRegister.faceDetector(image);
+            if (result.size() > 1){
+                std::cout << "file =" << __FILE__ << ", line =" << __LINE__ << ", faceDetect result more than one: "
+                                        <<result.size()<<" image name: "<<filenames[i]<<std::endl;
+            }else{
+                std::string tempString = filenames[i].substr(filenames[i].find_last_of("/")+1);
+                std::string RegisterName = tempString.substr(0, tempString.find_last_of("."));
+                box detBox = result[0].second;
+                cv::Mat RoiImg = image(cv::Rect(detBox.xmin, detBox.ymin, detBox.xmax - detBox.xmin, 
+                                    detBox.ymax- detBox.ymin));
+                std::vector<float> HOGfeature= getHogFeatureMap(RoiImg);
+                
+                outfile << RegisterName;
+                for(unsigned nn = 0; nn< HOGfeature.size(); nn++)
+                    outfile << " "<<HOGfeature[nn];
+            }
+            outfile <<std::endl; 
+        }
+        outfile.close();
+    }
+
+    FaceBase dataBase::getStoredDataBaseFeature(std::string basefeaturefile, int featureDim){
         std::ifstream infile(basefeaturefile.c_str());
         if (!infile.good()) {
             std::cout << "Cannot open " << basefeaturefile;
@@ -67,7 +117,7 @@ namespace RESIDEO{
             sstr << lineStr;
             sstr >> name >> gender;
             
-            for (int i = 0; i<512; i++){
+            for (int i = 0; i<featureDim; i++){
                 sstr >> value;
                 current_feature.featureFace.push_back(value);
             }

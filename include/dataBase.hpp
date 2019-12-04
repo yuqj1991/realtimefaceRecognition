@@ -1,5 +1,5 @@
-#ifndef _RESIDEO_KDTREE_H_
-#define _RESIDEO_KDTREE_H_
+#ifndef _RESIDEO_DATABASE_H_
+#define _RESIDEO_DATABASE_H_
 #include "faceAnalysis/faceAnalysis.hpp"
 #include <string.h>
 #include <iostream>
@@ -12,7 +12,7 @@ namespace RESIDEO{
     class dataBase
     {
         private:
-        util configParam;
+            util configParam;
         inline void GetFileNames(string path,vector<string>& filenames)
         {
             DIR *pDir;
@@ -35,7 +35,8 @@ namespace RESIDEO{
             std::string m_BaseDir;
             std::string m_faceFile;
             void generateBaseFeature(faceAnalysis faceRegister);
-            FaceBase getStoredDataBaseFeature(std::string basefeaturefile);
+            void generateBaseHOGFeature(faceAnalysis faceRegister);
+            FaceBase getStoredDataBaseFeature(std::string basefeaturefile, int featureDim);
     };
     
 }

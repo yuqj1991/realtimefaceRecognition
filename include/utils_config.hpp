@@ -102,20 +102,22 @@ namespace RESIDEO{
              encodeFeature feature, int gender);
         std::string serachCollectDataNameBymapSet(mapFaceCollectDataSet dataTestSet,
              encodeFeature detFeature, int gender);
+        mapFaceCollectDataSet getmapDatafaceBase(FaceBase &dataColletcion);
+        
         public:
         float cosValueThresold;
         float euclideanValueThresold;
         std::string faceDir;
         std::string facefeaturefile;
+        std::string HOGfacefeaturefile;
         std::string cropfaceDir;
         modelParameter detParam;
         modelParameter attriParam;
         modelParameter facenetParam;
         int detMargin;
         float confidencethreold;
-        std::string labelGender[2];
-        std::string labelGlass[2];
-        
+        std::vector < std::string > labelGender{"male", "female"};
+        std::vector < std::string > labelGlass{"wearing glasses", "not wearing glasses"};
         bool HOG;
         bool FIXEDWINDOW;
         bool MULTISCALE;

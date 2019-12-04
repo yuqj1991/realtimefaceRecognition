@@ -2,7 +2,6 @@
 #define TRACKER_H
 #include <vector>
 
-
 #include "sort/kalmanfilter.h"
 #include "sort/track.h"
 #include "sort/model.h"

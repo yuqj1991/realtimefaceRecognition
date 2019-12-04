@@ -19,8 +19,9 @@ find_package(CUDA REQUIRED)
 
 include_directories(${CUDA_INCLUDE_DIRS})
 
-ADD_DEFINITIONS(-DUSE_CUDNN)
 #ADD_DEFINITIONS(-DUSE_KCF_TRACKING)
+ADD_DEFINITIONS(-DUSE_CUDNN)
+ADD_DEFINITIONS(-DUSE_OPENCV)
 ADD_DEFINITIONS(-DDEBUG)
 ADD_DEFINITIONS(-DLOOP_SEARCH)
 #ADD_DEFINITIONS(-DLSH_SEARCH)
@@ -64,7 +65,7 @@ SET(detour_INCLUDE
 
 add_library(faceInference SHARED ${detour_SRCS} ${detour_INCLUDE})
 SET(LIBRARY_OUTPUT_PATH ../lib)
-target_link_libraries(faceInference ${OpenCV_LIBS} ${Caffe_LIB} ${GLOG_LIB} ${Boost_LIBRARIES} ${CUDA_LIB})
+target_link_libraries(faceInference ${OpenCV_LIBS} ${Caffe_LIB} ${GLOG_LIB} ${Boost_LIBRARIES} ${CUDA_LIB} -lpthread)
 
 include_directories(include) 
 FILE(GLOB_RECURSE sourcefiles "src/main.cpp")

@@ -18,47 +18,13 @@
 #include <opencv2/opencv.hpp>
 #endif
 
-
 #include <lshbox.h>
 #include<ctime>
 
 using namespace cv;
 using namespace RESIDEO;
 
-int trackingGap = 60;
-util configParam;
-
-mapFaceCollectDataSet getmapDatafaceBase(FaceBase &dataColletcion){
-	mapFaceCollectDataSet dataTestSet;
-	FaceBase::iterator it;
-	std::cout<<"************************"<<std::endl;
-	for(it = dataColletcion.begin(); it != dataColletcion.end(); it++){
-		int gender = it->first;
-		vector_feature feature = it->second;
-		for(unsigned i = 0; i < feature.size(); i++){
-
-		}
-		mapFeature subfeature;
-		
-		if(dataTestSet.find(gender) == dataTestSet.end()){
-			for(unsigned j = 0; j < feature.size(); j++){
-				std::cout<<"gender: "<<gender<<" j: "<<j<<std::endl;
-				subfeature.insert(std::make_pair(feature[j].second, feature[j].first));
-			}
-			std::cout<<"feature size: "<<subfeature.size()<<std::endl;
-			dataTestSet.insert(std::make_pair(gender, subfeature));
-		}
-	}
-	int num = 0;
-	mapFaceCollectDataSet::iterator iter;
-	for(iter = dataTestSet.begin(); iter != dataTestSet.end(); iter++){
-		mapFeature subfeature = iter->second;
-		num += subfeature.size();
-	}
-	std::cout<<"map num: "<<num<<std::endl;
-	return dataTestSet;
-}
-
+#ifdef LSH_SEARCH
 std::vector<lshbox::dataUnit> getlshDataset(FaceBase dataColletcion){
 		FaceBase::iterator iter;
 		std::vector<lshbox::dataUnit> dataSet;
@@ -70,6 +36,7 @@ std::vector<lshbox::dataUnit> getlshDataset(FaceBase dataColletcion){
 		}
 		return dataSet;
 }
+#endif
 #ifndef USE_KCF_TRACKING
 bool getRectsFeature(const cv::Mat& img, DETECTIONS& d){
 	std::vector<cv::Mat> mats;
@@ -84,7 +51,6 @@ bool getRectsFeature(const cv::Mat& img, DETECTIONS& d){
 		rc.height = (rc.y + rc.height <= img.rows? rc.height:(img.rows - rc.y));
 
 		cv::Mat mattmp = img(rc).clone();
-		//cv::Mat mattmp = img.clone();
 		cv::resize(mattmp, mattmp, cv::Size(64, 128));
 		Mat dst_gray;
 		cvtColor(img, dst_gray, CV_BGR2GRAY);
@@ -100,17 +66,15 @@ bool getRectsFeature(const cv::Mat& img, DETECTIONS& d){
 	return true;
 }
 
-void get_detections(DETECTBOX box,float confidence,DETECTIONS& d)
-{
-  DETECTION_ROW tmpRow;
-  tmpRow.tlwh = box;//DETECTBOX(x, y, w, h);
+void get_detections(DETECTBOX box,float confidence,DETECTIONS& d){
+	DETECTION_ROW tmpRow;
+	tmpRow.tlwh = box;//DETECTBOX(x, y, w, h);
 
-  tmpRow.confidence = confidence;
-  d.push_back(tmpRow);
+	tmpRow.confidence = confidence;
+	d.push_back(tmpRow);
 }
 
-void postprocess(std::vector<output>& outs,DETECTIONS& d)
-{
+void postprocess(std::vector<output>& outs,DETECTIONS& d){
 	std::vector<int> classIds;
 	std::vector<float> confidences;
 	std::vector<cv::Rect> boxes;
@@ -123,15 +87,26 @@ void postprocess(std::vector<output>& outs,DETECTIONS& d)
 	}
 }
 #endif
+
+int trackingGap = 60;
+util configParam;
 /************************main*********************************/
 int main(int argc, char* argv[]){
 	faceAnalysis faceInfernece;
 	dataBase baseface(configParam.faceDir, configParam.facefeaturefile);
-#if 0
-	baseface.generateBaseFeature(faceInfernece);
-#else
-	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParam.facefeaturefile);
 
+#if 0
+	#ifdef USE_KCF_TRACKING
+	baseface.generateBaseFeature(faceInfernece);
+	#else
+	baseface.generateBaseHOGFeature(faceInfernece);
+	#endif
+#else
+	#ifdef USE_KCF_TRACKING
+	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParam.facefeaturefile, 512);
+	#else
+	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParam.HOGfacefeaturefile, 3780);
+	#endif
 	#ifdef KDTREE_SEARCH
 	std::map<int, KDtype >trainData;
 	FaceBase::iterator iter;
@@ -181,20 +156,19 @@ int main(int argc, char* argv[]){
 	/**********************初始化跟踪******************/
 	#ifdef USE_KCF_TRACKING
 	std::vector<KCFTracker> trackerVector;
+	RecognResultTrack resutTrack;
 	#else
 	tracker DeepSortTracker(configParam.max_cosine_distance, configParam.nn_budget);
 	#endif
     /**********************while********************/
 	Mat frame;
-	Rect result;
 	int FrameIdx = 0;
+	bool stop = false;
 	VideoCapture cap(0);  
     if(!cap.isOpened())  
     {  
         return -1;  
     }
-    bool stop = false;
-	RecognResultTrack resutTrack;
     while(!stop)  
     {  
         cap>>frame;
@@ -262,6 +236,7 @@ int main(int argc, char* argv[]){
 				#endif
 			}
 		}else{
+			Rect result;
 			if(FrameIdx == 1){
 				trackerVector.clear();
 				for(unsigned ii = 0; ii <resutTrack.size(); ii++){//tracking
@@ -289,6 +264,10 @@ int main(int argc, char* argv[]){
 			}
 			
 		}
+		FrameIdx++;
+		if(FrameIdx == trackingGap){
+			FrameIdx = 0;
+		}
 		#else
 		std::vector<output> outs = faceInfernece.faceDetector(frame);
 		DETECTIONS detections;
@@ -302,27 +281,21 @@ int main(int argc, char* argv[]){
 					continue;
 				result.push_back(std::make_pair(track.track_id, track.to_tlwh()));
             }
-          	for(unsigned int k = 0; k < detections.size(); k++){
-				DETECTBOX tmpbox = detections[k].tlwh;
+          	for(unsigned n = 0; n < detections.size(); n++){
+				DETECTBOX tmpbox = detections[n].tlwh;
 				cv::Rect rect(tmpbox(0), tmpbox(1), tmpbox(2), tmpbox(3));
 				cv::rectangle(frame, rect, cv::Scalar(0,0,255), 4);
-				// cvScalar的储存顺序是B-G-R，CV_RGB的储存顺序是R-G-B
 
-				for(unsigned int k = 0; k < result.size(); k++){
+				for(unsigned k = 0; k < result.size(); k++){
 					DETECTBOX tmp = result[k].second;
 					cv::Rect rect = cv::Rect(tmp(0), tmp(1), tmp(2), tmp(3));
 					rectangle(frame, rect, cv::Scalar(255, 255, 0), 2);
-
 					std::string label = cv::format("%d", result[k].first);
 					cv::putText(frame, label, cv::Point(rect.x, rect.y), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 255, 0), 2);
 				}
             }
 		}
 		#endif
-		FrameIdx++;
-		if(FrameIdx == trackingGap){
-			FrameIdx = 0;
-		}
         imshow("faceRecognition",frame);
         if(waitKey(1) > 0)  
             stop = true;

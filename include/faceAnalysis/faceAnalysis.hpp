@@ -2,7 +2,6 @@
 #define _FACEANALYSIS_RESIDEO_
 
 #include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
 
 #include "objectDetect.hpp"
 #include "faceAttri.hpp"
@@ -11,6 +10,7 @@
 using namespace std;
 using namespace cv;
 using namespace RESIDEO;
+
 class faceAnalysis{
     public:
         faceAnalysis();

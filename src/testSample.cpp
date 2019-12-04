@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
 #if 0
 	baseface.generateBaseFeature(faceInfernece);
 #else
-	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParamTest.facefeaturefile);
+	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParamTest.facefeaturefile, 512);
 
 	FaceBase dataSubset;
 	std::map<int, KDtype >trainData;
