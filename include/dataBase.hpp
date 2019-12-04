@@ -12,7 +12,7 @@ namespace RESIDEO{
     class dataBase
     {
         private:
-
+        util configParam;
         inline void GetFileNames(string path,vector<string>& filenames)
         {
             DIR *pDir;

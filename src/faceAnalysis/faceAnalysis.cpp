@@ -2,10 +2,14 @@
 using namespace RESIDEO;
 
 faceAnalysis::faceAnalysis():
-    m_faceDet(detParam, confidencethreold),
-    m_faceAttri(attriParam),
-    m_facenet(facenetParam){
+    m_faceDet(configParam.detParam, configParam.confidencethreold),
+    m_faceAttri(configParam.attriParam),
+    m_facenet(configParam.facenetParam){
 
+}
+
+std::vector<output> faceAnalysis::faceDetector(cv::Mat frame){
+    return m_faceDet.getDetectfaceResultBox(frame);
 }
 
 std::vector<faceAnalysisResult> faceAnalysis::faceInference(cv::Mat frame, int detMargin, float angleThreold){
@@ -13,7 +17,7 @@ std::vector<faceAnalysisResult> faceAnalysis::faceInference(cv::Mat frame, int d
     int height = frame.rows;
     std::vector<faceAnalysisResult>result;
     std::vector<output> faceDetect= m_faceDet.getDetectfaceResultBox(frame);
-    for(int ii = 0; ii < faceDetect.size(); ii++){
+    for(unsigned ii = 0; ii < faceDetect.size(); ii++){
         faceAnalysisResult tempResult;
         box faceDetBox = faceDetect[ii].second;
         int xmin = max(faceDetBox.xmin - detMargin/2, 0);

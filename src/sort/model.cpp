@@ -1,4 +1,4 @@
-#include "model.h"
+#include "sort/model.h"
 #include <algorithm>
 
 const float kRatio=0.5;

@@ -17,7 +17,7 @@
 using namespace cv;
 using namespace RESIDEO;
 
-
+util configParamTest;
 std::vector<lshbox::dataUnit> getlshDataset(FaceBase dataColletcion, lshbox::featureUnit &goal){
 		FaceBase::iterator iter;
 		std::vector<lshbox::dataUnit> dataSet;
@@ -37,11 +37,11 @@ std::vector<lshbox::dataUnit> getlshDataset(FaceBase dataColletcion, lshbox::fea
 int main(int argc, char* argv[]){
 	faceAnalysis faceInfernece;
 
-	dataBase baseface(faceDir, facefeaturefile);
+	dataBase baseface(configParamTest.faceDir, configParamTest.facefeaturefile);
 #if 0
 	baseface.generateBaseFeature(faceInfernece);
 #else
-	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(facefeaturefile);
+	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParamTest.facefeaturefile);
 
 	FaceBase dataSubset;
 	std::map<int, KDtype >trainData;
@@ -132,7 +132,7 @@ int main(int argc, char* argv[]){
 	#endif
 /****************测试循环检索方式**********************************************/
 	startTime = clock();//计时开始
-	std::pair<float, std::string>nearestNeighbor_loop= serachCollectDataNameByloop(dataSubset,
+	std::pair<float, std::string>nearestNeighbor_loop= configParamTest.serachCollectDataNameByloop(dataSubset,
              															detFeature, goal_gender);
 	std::string person_loop = nearestNeighbor_loop.second;
 	endTime = clock();//计时结束

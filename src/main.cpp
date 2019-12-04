@@ -7,10 +7,16 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "faceAnalysis/faceAnalysis.hpp"
-#include "kcf/kcftracker.hpp"
 #include "utils_config.hpp"
 #include "dataBase.hpp"
 #include "kdtree.hpp"
+
+#ifdef USE_KCF_TRACKING
+#include "kcf/kcftracker.hpp"
+#else
+#include "sort/tracker.h"
+#include <opencv2/opencv.hpp>
+#endif
 
 
 #include <lshbox.h>
@@ -20,6 +26,7 @@ using namespace cv;
 using namespace RESIDEO;
 
 int trackingGap = 60;
+util configParam;
 
 mapFaceCollectDataSet getmapDatafaceBase(FaceBase &dataColletcion){
 	mapFaceCollectDataSet dataTestSet;
@@ -28,13 +35,13 @@ mapFaceCollectDataSet getmapDatafaceBase(FaceBase &dataColletcion){
 	for(it = dataColletcion.begin(); it != dataColletcion.end(); it++){
 		int gender = it->first;
 		vector_feature feature = it->second;
-		for(int i = 0; i < feature.size(); i++){
+		for(unsigned i = 0; i < feature.size(); i++){
 
 		}
 		mapFeature subfeature;
 		
 		if(dataTestSet.find(gender) == dataTestSet.end()){
-			for(int j = 0; j < feature.size(); j++){
+			for(unsigned j = 0; j < feature.size(); j++){
 				std::cout<<"gender: "<<gender<<" j: "<<j<<std::endl;
 				subfeature.insert(std::make_pair(feature[j].second, feature[j].first));
 			}
@@ -63,15 +70,67 @@ std::vector<lshbox::dataUnit> getlshDataset(FaceBase dataColletcion){
 		}
 		return dataSet;
 }
+#ifndef USE_KCF_TRACKING
+bool getRectsFeature(const cv::Mat& img, DETECTIONS& d){
+	std::vector<cv::Mat> mats;
+	for(DETECTION_ROW& dbox : d) {
+		cv::Rect rc = cv::Rect(int(dbox.tlwh(0)), int(dbox.tlwh(1)),
+				int(dbox.tlwh(2)), int(dbox.tlwh(3)));
+		rc.x -= (rc.height * 0.5 - rc.width) * 0.5;
+		rc.width = rc.height * 0.5;
+		rc.x = (rc.x >= 0 ? rc.x : 0);
+		rc.y = (rc.y >= 0 ? rc.y : 0);
+		rc.width = (rc.x + rc.width <= img.cols? rc.width: (img.cols-rc.x));
+		rc.height = (rc.y + rc.height <= img.rows? rc.height:(img.rows - rc.y));
 
-/************************以上测试map*********************************/
+		cv::Mat mattmp = img(rc).clone();
+		//cv::Mat mattmp = img.clone();
+		cv::resize(mattmp, mattmp, cv::Size(64, 128));
+		Mat dst_gray;
+		cvtColor(img, dst_gray, CV_BGR2GRAY);
+	
+		HOGDescriptor detector(Size(64, 128), Size(16, 16), Size(8, 8), Size(8, 8), 9);
+		vector<float> descriptor;
+		vector<Point> location;
+		detector.compute(dst_gray, descriptor, Size(0, 0), Size(0, 0),location);
+		for(int j = 0; j < feature_dim; j++){
+			dbox.feature[j] = descriptor[j];
+		}
+	}
+	return true;
+}
+
+void get_detections(DETECTBOX box,float confidence,DETECTIONS& d)
+{
+  DETECTION_ROW tmpRow;
+  tmpRow.tlwh = box;//DETECTBOX(x, y, w, h);
+
+  tmpRow.confidence = confidence;
+  d.push_back(tmpRow);
+}
+
+void postprocess(std::vector<output>& outs,DETECTIONS& d)
+{
+	std::vector<int> classIds;
+	std::vector<float> confidences;
+	std::vector<cv::Rect> boxes;
+
+	for (size_t i = 0; i < outs.size(); ++i){
+		output box = outs[i];
+		int width = box.second.xmax - box.second.xmin;
+		int height = box.second.ymax - box.second.ymin;
+		get_detections(DETECTBOX(box.second.xmin, box.second.ymin, width, height),box.first,d);
+	}
+}
+#endif
+/************************main*********************************/
 int main(int argc, char* argv[]){
 	faceAnalysis faceInfernece;
-	dataBase baseface(faceDir, facefeaturefile);
+	dataBase baseface(configParam.faceDir, configParam.facefeaturefile);
 #if 0
 	baseface.generateBaseFeature(faceInfernece);
 #else
-	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(facefeaturefile);
+	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParam.facefeaturefile);
 
 	#ifdef KDTREE_SEARCH
 	std::map<int, KDtype >trainData;
@@ -119,8 +178,13 @@ int main(int argc, char* argv[]){
     }
     lshbox::Metric<float> metric(512, L2_DIST);
 	#endif
+	/**********************初始化跟踪******************/
+	#ifdef USE_KCF_TRACKING
 	std::vector<KCFTracker> trackerVector;
-    /**********************初始化跟踪******************/
+	#else
+	tracker DeepSortTracker(configParam.max_cosine_distance, configParam.nn_budget);
+	#endif
+    /**********************while********************/
 	Mat frame;
 	Rect result;
 	int FrameIdx = 0;
@@ -134,12 +198,10 @@ int main(int argc, char* argv[]){
     while(!stop)  
     {  
         cap>>frame;
-		int width = frame.cols;
-		int height = frame.rows;
-		int nDataBaseSize = 0;
+		#if USE_KCF_TRACKING
 		if(FrameIdx % trackingGap == 0){
 			resutTrack.clear();
-			std::vector<faceAnalysisResult> result= faceInfernece.faceInference(frame, detMargin, 20.0f);
+			std::vector<faceAnalysisResult> result= faceInfernece.faceInference(frame, configParam.detMargin, 20.0f);
 			string person = "unknown man";	
 			for(int ii = 0; ii < result.size(); ii++){
 				if(result[ii].haveFeature){
@@ -152,15 +214,15 @@ int main(int argc, char* argv[]){
 						nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, female_kdtree);	
 					}
 					person = nearestNeighbor.second;
-					if(nearestNeighbor.first > euclideanValueThresold){
+					if(nearestNeighbor.first > configParam.euclideanValueThresold){
 						person = "unknown man";
 					}
 					#endif
 					#ifdef LOOP_SEARCH
-					std::pair<float, std::string>nearestNeighbor= serachCollectDataNameByloop(dataColletcion,
+					std::pair<float, std::string>nearestNeighbor= configParam.serachCollectDataNameByloop(dataColletcion,
              															detFeature, result[ii].faceAttri.gender);
 					person = nearestNeighbor.second;
-					if(nearestNeighbor.first < cosValueThresold){
+					if(nearestNeighbor.first < configParam.cosValueThresold){
 						person = "unknown man";
 					}
 					#endif
@@ -168,11 +230,11 @@ int main(int argc, char* argv[]){
 					lshgoal = result[ii].faceFeature.featureFace;
 					std::pair<float, std::string>nearestNeighbor = mylsh.query(lshgoal, metric, lshDataSet);
 					person = nearestNeighbor.second;
-					if(nearestNeighbor.first > euclideanValueThresold){
+					if(nearestNeighbor.first > configParam.euclideanValueThresold){
 						person = "unknown man";
 					}
 					#endif
-					#ifdef USE_TRACKING
+					#ifdef USE_KCF_TRACKING
 					detBoxInfo trackBoxInfo;
 					trackBoxInfo.detBox.xmin = result[ii].faceBox.xmin;
 					trackBoxInfo.detBox.xmax = result[ii].faceBox.xmax;
@@ -194,7 +256,7 @@ int main(int argc, char* argv[]){
 					cv::circle(roiImage, cv::Point(result[ii].faceAttri.landmarks[i].point_x, result[ii].faceAttri.landmarks[i].point_y)
 								, 3, cv::Scalar(0, 0, 213), -1);
 				}
-				std::string title = labelGender[result[ii].faceAttri.gender] + std::string(", ") + labelGlass[result[ii].faceAttri.glass];
+				std::string title = configParam.labelGender[result[ii].faceAttri.gender] + std::string(", ") + configParam.labelGlass[result[ii].faceAttri.glass];
 				cv::putText(frame, title, cv::Point( detBox.xmin + 40, detBox.ymin + 40 ), 
 					cv::FONT_ITALIC, 0.6, Scalar(0, 255, 0), 1);
 				#endif
@@ -202,34 +264,61 @@ int main(int argc, char* argv[]){
 		}else{
 			if(FrameIdx == 1){
 				trackerVector.clear();
-				for(int ii = 0; ii <resutTrack.size(); ii++){//tracking
+				for(unsigned ii = 0; ii <resutTrack.size(); ii++){//tracking
 					int xMin = resutTrack[ii].detBox.xmin;
 					int yMin = resutTrack[ii].detBox.ymin;
 					int width_ = resutTrack[ii].detBox.xmax - resutTrack[ii].detBox.xmin;
 					int height_ = resutTrack[ii].detBox.ymax - resutTrack[ii].detBox.ymin;
-					KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
+					KCFTracker tracker(configParam.HOG, configParam.FIXEDWINDOW, configParam.MULTISCALE, configParam.LAB);
 					tracker.init( Rect(xMin, yMin, width_, height_), frame );
-					#if USE_TRACKING
 					rectangle( frame, Point( xMin, yMin ), Point( xMin+width_, yMin+height_), 
 													Scalar( 0, 255, 255 ), 1, 8 );
 					cv::putText(frame, resutTrack[ii].name, cv::Point( result.x, result.y), 
 							cv::FONT_HERSHEY_COMPLEX, 1, Scalar(0, 255, 255), 2, 8, 0);
-					#endif
 					trackerVector.push_back(tracker);
 				}
 			}else{
-				for(int ii = 0; ii <resutTrack.size(); ii++){
+				for(unsigned ii = 0; ii <resutTrack.size(); ii++){
 					result = trackerVector[ii].update(frame);
-					#if USE_TRACKING
 					rectangle( frame, Point( result.x, result.y ), 
 											Point( result.x+result.width, result.y+result.height), 
 															Scalar( 0, 255, 255 ), 1, 8 );
 					cv::putText(frame, resutTrack[ii].name, cv::Point( result.x, result.y), 
 						cv::FONT_HERSHEY_COMPLEX, 1, Scalar(0, 255, 255), 2, 8, 0);
-					#endif
 				}
 			}
+			
 		}
+		#else
+		std::vector<output> outs = faceInfernece.faceDetector(frame);
+		DETECTIONS detections;
+		postprocess(outs,detections);
+		if(getRectsFeature(frame, detections)){
+			DeepSortTracker.predict();
+          	DeepSortTracker.update(detections);
+			std::vector<RESULT_DATA> result;
+          	for(Track& track : DeepSortTracker.tracks) {
+				if(!track.is_confirmed() || track.time_since_update > 1)
+					continue;
+				result.push_back(std::make_pair(track.track_id, track.to_tlwh()));
+            }
+          	for(unsigned int k = 0; k < detections.size(); k++){
+				DETECTBOX tmpbox = detections[k].tlwh;
+				cv::Rect rect(tmpbox(0), tmpbox(1), tmpbox(2), tmpbox(3));
+				cv::rectangle(frame, rect, cv::Scalar(0,0,255), 4);
+				// cvScalar的储存顺序是B-G-R，CV_RGB的储存顺序是R-G-B
+
+				for(unsigned int k = 0; k < result.size(); k++){
+					DETECTBOX tmp = result[k].second;
+					cv::Rect rect = cv::Rect(tmp(0), tmp(1), tmp(2), tmp(3));
+					rectangle(frame, rect, cv::Scalar(255, 255, 0), 2);
+
+					std::string label = cv::format("%d", result[k].first);
+					cv::putText(frame, label, cv::Point(rect.x, rect.y), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 255, 0), 2);
+				}
+            }
+		}
+		#endif
 		FrameIdx++;
 		if(FrameIdx == trackingGap){
 			FrameIdx = 0;

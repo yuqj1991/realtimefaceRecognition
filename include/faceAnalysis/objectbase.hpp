@@ -18,6 +18,7 @@ namespace RESIDEO{
             objectbase(modelParameter &param);
             //~objectbase();
             void init_net();
+            util configParam;
         };
     
 }//namespace

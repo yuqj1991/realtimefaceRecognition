@@ -15,9 +15,10 @@ class faceAnalysis{
     public:
         faceAnalysis();
         ~faceAnalysis();
+        std::vector<output> faceDetector(cv::Mat frame);
         std::vector<faceAnalysisResult> faceInference(cv::Mat frame, int detMargin, float angleThreold);
-        
     private:
+        util configParam;
         objectDetect m_faceDet;
         faceAttri m_faceAttri;
         Facenet m_facenet;

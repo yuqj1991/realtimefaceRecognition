@@ -1,6 +1,6 @@
-#include "sorttracker.h"
+#include "sort/tracker.h"
 #include "sort/nn_matching.h"
-#include "../DeepAppearanceDescriptor/model.h"
+#include "sort/model.h"
 #include "sort/linear_assignment.h"
 using namespace std;
 
@@ -102,7 +102,7 @@ void tracker::update(const DETECTIONS &detections)
         if(track.is_confirmed() == false) continue;
         active_targets.push_back(track.track_id);
         tid_features.push_back(std::make_pair(track.track_id, track.features));
-        FEATURESS t = FEATURESS(0, 128);
+        FEATURESS t = FEATURESS(0, feature_dim);
         track.features = t;
     }
     this->metric->partial_fit(tid_features, active_targets);
@@ -178,7 +178,7 @@ DYNAMICM tracker::gated_matric(
         const std::vector<int>& track_indices,
         const std::vector<int>& detection_indices)
 {
-    FEATURESS features(detection_indices.size(), 128);
+    FEATURESS features(detection_indices.size(), feature_dim);
     int pos = 0;
     for(int i:detection_indices) {
         features.row(pos++) = dets[i].feature;

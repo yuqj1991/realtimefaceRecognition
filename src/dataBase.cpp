@@ -1,6 +1,6 @@
 #include "dataBase.hpp"
 namespace RESIDEO{
-    dataBase::dataBase(string faceDir, string saveFeatureFile):m_BaseDir(faceDir), 
+    dataBase::dataBase(string faceDir, string saveFeatureFile):m_BaseDir(configParam.faceDir), 
                     m_faceFile(saveFeatureFile)
     {
     }
@@ -19,7 +19,7 @@ namespace RESIDEO{
                 printf("No image data\n");
                 return ;
             }
-            std::vector<faceAnalysisResult> result= faceRegister.faceInference(image, detMargin, 20.0f);
+            std::vector<faceAnalysisResult> result= faceRegister.faceInference(image, configParam.detMargin, 20.0f);
             if (result.size() > 1){
                 std::cout << "file =" << __FILE__ << ", line =" << __LINE__ << ", faceDetect result more than one: "
                                         <<result.size()<<" image name: "<<filenames[i]<<std::endl;
@@ -31,7 +31,7 @@ namespace RESIDEO{
                 cv::rectangle( image, cv::Point( detBox.xmin, detBox.ymin ), 
 											cv::Point( detBox.xmax, detBox.ymax), 
 															cv::Scalar( 0, 255, 255 ), 1, 8 );
-                cv::imwrite(cropfaceDir + tempString, image);
+                cv::imwrite(configParam.cropfaceDir + tempString, image);
                 #endif
                 
                 if(result[0].haveFeature){
@@ -83,7 +83,7 @@ namespace RESIDEO{
             sstr.clear();
         }
         infile.close();
-        printf("male size: %d, female size: %d\n", base.find(0)->second.size(), base.find(1)->second.size());
+        std::cout<<"male size: "<<base.find(0)->second.size() << ", female size: %d\n" << base.find(1)->second.size();
         return base;
     }
 

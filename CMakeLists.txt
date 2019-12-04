@@ -15,24 +15,19 @@ link_directories(../lib)
 
 set(GLOG_LIB glog)
 
-
-
 find_package(CUDA REQUIRED)
 
 include_directories(${CUDA_INCLUDE_DIRS})
 
-
-#ADD_DEFINITIONS(-DCPU_ONLY)
-
 ADD_DEFINITIONS(-DUSE_CUDNN)
-ADD_DEFINITIONS(-DUSE_TRACKING)
+#ADD_DEFINITIONS(-DUSE_KCF_TRACKING)
 ADD_DEFINITIONS(-DDEBUG)
 ADD_DEFINITIONS(-DLOOP_SEARCH)
 #ADD_DEFINITIONS(-DLSH_SEARCH)
 #ADD_DEFINITIONS(-DKDTREE_SEARCH)
 
-
 SET(detour_SRCS
+	src/util_config.cpp
 	src/Point.cpp
 	src/dataBase.cpp
 	src/kcf/fhog.cpp
@@ -43,20 +38,31 @@ SET(detour_SRCS
 	src/faceAnalysis/objectDetect.cpp
 	src/faceAnalysis/reId.cpp
 	src/faceAnalysis/faceAnalysis.cpp
+	src/sort/kalmanfilter.cpp
+	src/sort/linear_assignment.cpp
+	src/sort/model.cpp
+	src/sort/nn_matching.cpp
+	src/sort/track.cpp
+	src/sort/tracker.cpp
+	src/munkresAssignment/hungarianoper.cpp
+	src/munkresAssignment/munkres.cpp
 )
-SET(detour_HDRS
+SET(detour_INCLUDE
 	include/Point.hpp
 	include/utils_config.hpp
 	include/dataBase.hpp
 	include/kdtree.hpp
 	include/lshbox.h
 	include/faceAnalysis
-	include/eigen
 	include/lshbox
 	include/kcf
+	include/sort
+	include/munkresAssignment
+	include/eigen/Eigen
+	include
 )
 
-add_library(faceInference SHARED ${detour_SRCS} ${detour_HDRS})
+add_library(faceInference SHARED ${detour_SRCS} ${detour_INCLUDE})
 SET(LIBRARY_OUTPUT_PATH ../lib)
 target_link_libraries(faceInference ${OpenCV_LIBS} ${Caffe_LIB} ${GLOG_LIB} ${Boost_LIBRARIES} ${CUDA_LIB})
 

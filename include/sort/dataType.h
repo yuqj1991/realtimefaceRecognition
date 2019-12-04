@@ -1,19 +1,18 @@
-#pragma once
-#ifndef DATATYPE_H
-#define DATATYPEH
+#ifndef DATATYPE_HPP_
+#define DATATYPE_HPP_
 
 #include <cstddef>
 #include <vector>
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
+const int feature_dim = 3780;
 typedef Eigen::Matrix<float, 1, 4, Eigen::RowMajor> DETECTBOX;
 typedef Eigen::Matrix<float, -1, 4, Eigen::RowMajor> DETECTBOXSS;
-typedef Eigen::Matrix<float, 1, 512, Eigen::RowMajor> FEATURE;
-typedef Eigen::Matrix<float, Eigen::Dynamic, 512, Eigen::RowMajor> FEATURESS;
+typedef Eigen::Matrix<float, 1, feature_dim, Eigen::RowMajor> FEATURE;
+typedef Eigen::Matrix<float, Eigen::Dynamic, feature_dim, Eigen::RowMajor> FEATURESS;
 
 //Kalmanfilter
-//typedef Eigen::Matrix<float, 8, 8, Eigen::RowMajor> KAL_FILTER;
 typedef Eigen::Matrix<float, 1, 8, Eigen::RowMajor> KAL_MEAN;
 typedef Eigen::Matrix<float, 8, 8, Eigen::RowMajor> KAL_COVA;
 typedef Eigen::Matrix<float, 1, 4, Eigen::RowMajor> KAL_HMEAN;

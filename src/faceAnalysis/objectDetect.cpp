@@ -96,7 +96,7 @@ namespace RESIDEO{
         std::vector<output> out;
         int width = img.cols;
         int height = img.rows;
-        for (int i = 0; i < detections.size(); ++i) {
+        for (unsigned i = 0; i < detections.size(); ++i) {
             const vector<float>& d = detections[i];
             const float score = d[2];
             if (score >= m_confidence_threshold_) {
@@ -119,7 +119,7 @@ namespace RESIDEO{
         std::vector<output> out;
         int width = img.cols;
         int height = img.rows;
-        for (int i = 0; i < detections.size(); ++i) {
+        for (unsigned i = 0; i < detections.size(); ++i) {
             const vector<float>& d = detections[i];
             const float score = d[2];
             if(d[1] != 15)

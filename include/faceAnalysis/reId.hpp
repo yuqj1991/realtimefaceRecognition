@@ -33,13 +33,13 @@ namespace RESIDEO{
             std::vector<float> Predict(cv::Mat &inputImg);
             inline vector<float> normL2Vector(vector<float> feature){
                 assert(feature.size() > 0);
-                float sum_vector;
-                for(int i = 0; i < feature.size(); i++){
+                float sum_vector = 0.f;
+                for(unsigned i = 0; i < feature.size(); i++){
                     sum_vector += std::pow(feature[i], 2);
                 }
                 float sum_sqrt =std::sqrt(sum_vector) + 0.0000001;
                 vector<float> normVector;
-                for(int i = 0; i < feature.size(); i++){
+                for(unsigned i = 0; i < feature.size(); i++){
                     normVector.push_back( float (feature[i] / sum_sqrt));
                 }
                 return normVector;
