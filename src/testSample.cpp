@@ -8,12 +8,12 @@
 
 #include "faceAnalysis/faceAnalysis.hpp"
 #include "kcf/kcftracker.hpp"
-#include "utils_config.hpp"
-#include "dataBase.hpp"
-#include "kdtree.hpp"
+#include "util/utils_config.hpp"
+#include "dataBase/dataBase.hpp"
+#include "util/kdtree.hpp"
 #include<ctime>
 
-#include <lshbox.h>
+#include "util/lshbox.h"
 using namespace cv;
 using namespace RESIDEO;
 

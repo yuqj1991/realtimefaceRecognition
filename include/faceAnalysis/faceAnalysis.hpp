@@ -6,7 +6,7 @@
 #include "objectDetect.hpp"
 #include "faceAttri.hpp"
 #include "faceRecong.hpp"
-#include "utils_config.hpp"
+#include "util/utils_config.hpp"
 using namespace std;
 using namespace cv;
 using namespace RESIDEO;

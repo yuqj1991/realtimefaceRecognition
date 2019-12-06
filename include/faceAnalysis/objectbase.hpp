@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 #include <caffe/caffe.hpp>
-#include "utils_config.hpp"
+#include "util/utils_config.hpp"
 using namespace caffe;
 
 

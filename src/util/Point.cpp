@@ -1,4 +1,4 @@
-#include "Point.hpp"
+#include "util/Point.hpp"
 
 template <std::size_t N>
 std::size_t kdPoint<N>::size() const {

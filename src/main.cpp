@@ -7,9 +7,9 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "faceAnalysis/faceAnalysis.hpp"
-#include "utils_config.hpp"
-#include "dataBase.hpp"
-#include "kdtree.hpp"
+#include "util/utils_config.hpp"
+#include "dataBase/dataBase.hpp"
+#include "util/kdtree.hpp"
 
 #ifdef USE_KCF_TRACKING
 #include "kcf/kcftracker.hpp"
@@ -18,7 +18,7 @@
 #include <opencv2/opencv.hpp>
 #endif
 
-#include <lshbox.h>
+#include "util/lshbox.h"
 #include<ctime>
 
 using namespace cv;
@@ -107,7 +107,7 @@ int main(int argc, char* argv[]){
 	faceAnalysis faceInfernece;
 	dataBase baseface(configParam.faceDir, configParam.facefeaturefile);
 
-#if 0
+#if 1
 	#ifdef USE_KCF_TRACKING
 	baseface.generateBaseFeature(faceInfernece);
 	#else

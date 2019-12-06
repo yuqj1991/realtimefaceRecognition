@@ -124,8 +124,8 @@ namespace RESIDEO{
         bool LAB;
         int nn_budget;
         float max_cosine_distance;
-        int facefeatureDim = 512;
-        int faceHOGfeatureDim = 3780;
+        int facefeatureDim;
+        int faceHOGfeatureDim;
     };
 }
 #endif

@@ -23,7 +23,7 @@ using KAL_HDATA = std::pair<KAL_HMEAN, KAL_HCOVA>;
 //main
 using RESULT_DATA = std::pair<std::string, DETECTBOX>;
 
-//tracker:
+//tracker
 using TRACKER_DATA = std::pair<int, FEATURESS>;
 using MATCH_DATA = std::pair<int, int>;
 typedef struct t{

@@ -19,7 +19,7 @@ find_package(CUDA REQUIRED)
 
 include_directories(${CUDA_INCLUDE_DIRS})
 
-#ADD_DEFINITIONS(-DUSE_KCF_TRACKING)
+ADD_DEFINITIONS(-DUSE_KCF_TRACKING)
 ADD_DEFINITIONS(-DUSE_CUDNN)
 ADD_DEFINITIONS(-DUSE_OPENCV)
 ADD_DEFINITIONS(-DDEBUG)
@@ -28,9 +28,9 @@ ADD_DEFINITIONS(-DLOOP_SEARCH)
 #ADD_DEFINITIONS(-DKDTREE_SEARCH)
 
 SET(detour_SRCS
-	src/util_config.cpp
-	src/Point.cpp
-	src/dataBase.cpp
+	src/util/util_config.cpp
+	src/util/Point.cpp
+	src/dataBase/dataBase.cpp
 	src/kcf/fhog.cpp
 	src/kcf/kcftracker.cpp
 	src/faceAnalysis/faceAttri.cpp
@@ -49,18 +49,14 @@ SET(detour_SRCS
 	src/munkresAssignment/munkres.cpp
 )
 SET(detour_INCLUDE
-	include/Point.hpp
-	include/utils_config.hpp
-	include/dataBase.hpp
-	include/kdtree.hpp
-	include/lshbox.h
 	include/faceAnalysis
 	include/lshbox
 	include/kcf
 	include/sort
 	include/munkresAssignment
 	include/eigen/Eigen
-	include
+	include/util
+	include/dataBase
 )
 
 add_library(faceInference SHARED ${detour_SRCS} ${detour_INCLUDE})
