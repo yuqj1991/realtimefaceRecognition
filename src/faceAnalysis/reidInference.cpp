@@ -3,15 +3,15 @@ using namespace RESIDEO;
 
 reidAnalysis::reidAnalysis():
     m_bodyDet(configParam.detParam, configParam.confidencethreold),
-    m_reidRecnet(configParam.reidParam, configParam.confidencethreold){
+    m_reidRecnet(configParam.reidParam){
 
 }
 
 std::vector<output> reidAnalysis::bodyDetector(cv::Mat frame){
-    return m_bodyDet.getDetectfaceResultBox(frame);
+    return m_bodyDet.getDetectpersonResultBox(frame);
 }
 
-std::vector<reidAnalysisResult> reidAnalysis::faceInference(cv::Mat frame, int detMargin){
+std::vector<reidAnalysisResult> reidAnalysis::reidInference(cv::Mat frame, int detMargin){
     int width = frame.cols;
     int height = frame.rows;
     std::vector<reidAnalysisResult>result;

@@ -51,7 +51,7 @@ namespace RESIDEO{
             -m_model_parameter.m_mean_value_[0] * m_model_parameter.m_std_value_);
         cv::split(sample_float, *input_channels);
     }
-    std::vector<float> reID::Predict(cv::Mat &inputImg){
+    encodeFeature reID::Predict(cv::Mat &inputImg){
         Blob<float>* input_layer = net_->input_blobs()[0];
         input_layer->Reshape(1, m_num_channels_,
                         m_input_geometry_.height, m_input_geometry_.width);
@@ -63,9 +63,10 @@ namespace RESIDEO{
         Blob<float>* output_layer = net_->output_blobs()[0];
         const float* result = output_layer->cpu_data();
         const int featureDim = output_layer->channels();
-        std::vector<float> featurerawFace, normface;
+
+        encodeFeature featurerawFace, normface;
         for(int ii=0; ii<featureDim; ii++){
-            featurerawFace.push_back(result[ii]);
+            featurerawFace.featureFace.push_back(result[ii]);
         }
         normface = normL2Vector(featurerawFace);
         return normface;

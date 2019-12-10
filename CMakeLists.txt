@@ -39,6 +39,7 @@ SET(detour_SRCS
 	src/faceAnalysis/objectDetect.cpp
 	src/faceAnalysis/reId.cpp
 	src/faceAnalysis/faceAnalysis.cpp
+	src/faceAnalysis/reidInference.cpp
 	src/sort/kalmanfilter.cpp
 	src/sort/linear_assignment.cpp
 	src/sort/model.cpp
@@ -55,6 +56,7 @@ SET(detour_INCLUDE
 	include/sort
 	include/munkresAssignment
 	include/eigen/Eigen
+	include/eigen
 	include/util
 	include/dataBase
 )

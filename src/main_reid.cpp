@@ -191,7 +191,7 @@ int main(int argc, char* argv[]){
 				#endif
 				#ifdef LOOP_SEARCH
 				std::pair<float, std::string>nearestNeighbor= configParam.serachCollectDataNameByloop(dataColletcion,
-																	detFeature, result[ii].faceAttri.gender);
+             															detFeature);
 				person = nearestNeighbor.second;
 				if(nearestNeighbor.first < configParam.cosValueThresold){
 					person = "unknown man";
