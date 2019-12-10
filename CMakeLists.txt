@@ -72,3 +72,7 @@ FILE(GLOB_RECURSE testsourcefiles "src/testSample.cpp")
 add_executable( test ${testsourcefiles} )
 target_link_libraries( test faceInference)
 
+FILE(GLOB_RECURSE sourcefiles "src/main_reid.cpp")
+add_executable( reid_test ${sourcefiles} )
+target_link_libraries( reid_test faceInference)
+

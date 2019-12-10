@@ -25,9 +25,10 @@ namespace RESIDEO{
             explicit objectDetect(modelParameter &param, float & confidence_threshold);
             void WrapInputLayer(std::vector<cv::Mat>* input_channels);
             void Preprocess(cv::Mat& img, std::vector<cv::Mat>* input_channels);
-            std::vector<Prediction> Predict(cv::Mat &inputImg);
-            std::vector<output> getDetectfaceResultBox(cv::Mat& img);
-            std::vector<output> getDetectpersonResultBox(cv::Mat& img);
+            std::vector <Prediction> Predict(cv::Mat &inputImg);
+            std::vector <output> getDetectfaceResultBox(cv::Mat& img);
+            std::vector <output> getDetectpersonResultBox(cv::Mat& img);
+            std::vector <objectBox> getDetectobjectBox(cv::Mat& img);
     };  
 }//namespace
 

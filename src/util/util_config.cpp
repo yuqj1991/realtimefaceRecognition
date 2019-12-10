@@ -80,6 +80,21 @@ namespace RESIDEO{
         return result;
     }
 
+    std::pair<float, std::string> util::serachCollectDataNameByloop(vector_feature dataColletcion,
+             encodeFeature feature){
+        std::pair<float, std::string> result;
+        float maxDist = 0.f, comDist = 0.f;
+        for(unsigned nn = 0; nn<dataColletcion.size(); nn++){
+            comDist = computeDistance(feature.featureFace, dataColletcion[nn].second.featureFace, 1, feature.featureFace.size());
+            if(maxDist < comDist){
+                result.second = dataColletcion[nn].first;
+                result.first = comDist;
+                maxDist = comDist;
+            }
+        }
+        return result;
+    }
+
     std::string util::serachCollectDataNameBymapSet(mapFaceCollectDataSet dataTestSet,
              encodeFeature detFeature, int gender){
         std::string result;

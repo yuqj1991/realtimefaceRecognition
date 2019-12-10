@@ -106,8 +106,6 @@ namespace RESIDEO{
                     .xmax = static_cast<int>(d[5]*width),
                     .ymax = static_cast<int>(d[6]*height)
                 };
-                printf("score: %f,xmin: %f,ymin: %f, xmax: %f, ymax: %f\n", score, d[3], d[4], d[5], d[6]);
-                printf("score: %f,xmin: %d,ymin: %d, xmax: %d, ymax: %d\n", score, int(d[3]*width), ou.ymin, ou.xmax, ou.ymax);
                 out.push_back(std::make_pair(score, ou));
                                     
             }
@@ -131,10 +129,29 @@ namespace RESIDEO{
                     .xmax = static_cast<int>(d[5]*width),
                     .ymax = static_cast<int>(d[6]*height)
                 };
-                printf("score: %f,xmin: %f,ymin: %f, xmax: %f, ymax: %f\n", score, d[3], d[4], d[5], d[6]);
-                printf("score: %f,xmin: %d,ymin: %d, xmax: %d, ymax: %d\n", score, int(d[3]*width), ou.ymin, ou.xmax, ou.ymax);
                 out.push_back(std::make_pair(score, ou));
                                     
+            }
+        }
+        return out;
+    }
+
+    std::vector<objectBox> objectDetect::getDetectobjectBox(cv::Mat& img){
+        std::vector<Prediction> detections = Predict(img);
+        std::vector<objectBox> out;
+        int width = img.cols;
+        int height = img.rows;
+        for (unsigned i = 0; i < detections.size(); ++i) {
+            const vector<float>& d = detections[i];
+            const float score = d[2];
+            if (score >= m_confidence_threshold_) {
+                box ou = {
+                    .xmin = static_cast<int>(d[3]*width),
+                    .ymin = static_cast<int>(d[4]*height),
+                    .xmax = static_cast<int>(d[5]*width),
+                    .ymax = static_cast<int>(d[6]*height)
+                };
+                out.push_back(std::make_pair(static_cast <int> (d[1]), ou));                    
             }
         }
         return out;

@@ -1,6 +1,7 @@
 #ifndef _RESIDEO_DATABASE_H_
 #define _RESIDEO_DATABASE_H_
 #include "faceAnalysis/faceAnalysis.hpp"
+#include "faceAnalysis/reidInference.hpp"
 #include <string.h>
 #include <iostream>
 #include <fstream>
@@ -37,6 +38,10 @@ namespace RESIDEO{
             void generateBaseFeature(faceAnalysis faceRegister);
             void generateBaseHOGFeature(faceAnalysis faceRegister);
             FaceBase getStoredDataBaseFeature(std::string basefeaturefile, int featureDim);
+
+            void generatebodyFeature(reidAnalysis reidRegister);
+            void generateBasebodyHOGFeature(reidAnalysis reidRegister);
+            vector_feature getStoredReidFeature(std::string basefeaturefile, int featureDim);
     };
     
 }

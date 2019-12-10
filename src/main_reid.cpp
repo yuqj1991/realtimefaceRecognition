@@ -6,7 +6,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "faceAnalysis/faceAnalysis.hpp"
+#include "faceAnalysis/reidInference.hpp"
 #include "util/utils_config.hpp"
 #include "dataBase/dataBase.hpp"
 #include "util/kdtree.hpp"
@@ -18,25 +18,11 @@
 #include <opencv2/opencv.hpp>
 #endif
 
-#include "util/lshbox.h"
 #include<ctime>
 
 using namespace cv;
 using namespace RESIDEO;
 
-#ifdef LSH_SEARCH
-std::vector<lshbox::dataUnit> getlshDataset(FaceBase dataColletcion){
-		FaceBase::iterator iter;
-		std::vector<lshbox::dataUnit> dataSet;
-		for(iter = dataColletcion.begin(); iter != dataColletcion.end(); iter++){
-			vector_feature feature = iter->second;
-			for(int j = 0; j < feature.size(); j++){
-				dataSet.push_back(std::make_pair(feature[j].second.featureFace, feature[j].first));
-			}
-		}
-		return dataSet;
-}
-#endif
 #ifndef USE_KCF_TRACKING
 bool getRectsFeature(const cv::Mat& img, DETECTIONS& d){
 	std::vector<cv::Mat> mats;
@@ -104,21 +90,20 @@ int trackingGap = 60;
 util configParam;
 /************************main*********************************/
 int main(int argc, char* argv[]){
-	faceAnalysis faceInfernece;
+	reidAnalysis reidRecnet;
 	dataBase baseface(configParam.faceDir, configParam.facefeaturefile);
-
-#if 0
+#if 1
 	#ifdef USE_KCF_TRACKING
-	baseface.generateBaseFeature(faceInfernece);
+	baseface.generatebodyFeature(reidRecnet);
 	#else
-	baseface.generateBaseHOGFeature(faceInfernece);
+	baseface.generateBasebodyHOGFeature(reidRecnet);
 	#endif
 #else
 	#ifdef USE_KCF_TRACKING
-	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParam.facefeaturefile, 
+	vector_feature dataColletcion = baseface.getStoredReidFeature(configParam.facefeaturefile, 
 														configParam.facefeatureDim);
 	#else
-	FaceBase dataColletcion = baseface.getStoredDataBaseFeature(configParam.HOGfacefeaturefile, 
+	vector_feature dataColletcion = baseface.getStoredReidFeature(configParam.HOGfacefeaturefile, 
 													configParam.faceHOGfeatureDim);
 	#endif
 	#ifdef KDTREE_SEARCH
@@ -179,8 +164,7 @@ int main(int argc, char* argv[]){
 	int FrameIdx = 0;
 	bool stop = false;
 	VideoCapture cap(0);  
-    if(!cap.isOpened())  
-    {  
+    if(!cap.isOpened()){  
         return -1;  
     }
     while(!stop)  
@@ -189,49 +173,47 @@ int main(int argc, char* argv[]){
 		#if USE_KCF_TRACKING
 		if(FrameIdx % trackingGap == 0){
 			resutTrack.clear();
-			std::vector<faceAnalysisResult> result= faceInfernece.faceInference(frame, configParam.detMargin, 20.0f);
+			std::vector<faceAnalysisResult> result= reidRecnet.reidInference(frame, configParam.detMargin);
 			string person = "unknown man";	
 			for(int ii = 0; ii < result.size(); ii++){
-				if(result[ii].haveFeature){
-					encodeFeature detFeature = result[ii].faceFeature;
-					#ifdef KDTREE_SEARCH
-					std::pair<float, std::string > nearestNeighbor;
-					if(result[ii].faceAttri.gender==0)
-						nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, male_kdtree);
-					else{
-						nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, female_kdtree);	
-					}
-					person = nearestNeighbor.second;
-					if(nearestNeighbor.first > configParam.euclideanValueThresold){
-						person = "unknown man";
-					}
-					#endif
-					#ifdef LOOP_SEARCH
-					std::pair<float, std::string>nearestNeighbor= configParam.serachCollectDataNameByloop(dataColletcion,
-             															detFeature);
-					person = nearestNeighbor.second;
-					if(nearestNeighbor.first < configParam.cosValueThresold){
-						person = "unknown man";
-					}
-					#endif
-					#ifdef LSH_SEARCH
-					lshgoal = result[ii].faceFeature.featureFace;
-					std::pair<float, std::string>nearestNeighbor = mylsh.query(lshgoal, metric, lshDataSet);
-					person = nearestNeighbor.second;
-					if(nearestNeighbor.first > configParam.euclideanValueThresold){
-						person = "unknown man";
-					}
-					#endif
-					#ifdef USE_KCF_TRACKING
-					detBoxInfo trackBoxInfo;
-					trackBoxInfo.detBox.xmin = result[ii].faceBox.xmin;
-					trackBoxInfo.detBox.xmax = result[ii].faceBox.xmax;
-					trackBoxInfo.detBox.ymin = result[ii].faceBox.ymin;
-					trackBoxInfo.detBox.ymax = result[ii].faceBox.ymax;
-					trackBoxInfo.name = person;
-					resutTrack.push_back(trackBoxInfo);
-					#endif
+				encodeFeature detFeature = result[ii].reidfeature;
+				#ifdef KDTREE_SEARCH
+				std::pair<float, std::string > nearestNeighbor;
+				if(result[ii].faceAttri.gender==0)
+					nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, male_kdtree);
+				else{
+					nearestNeighbor = searchNearestNeighbor(detFeature.featureFace, female_kdtree);	
 				}
+				person = nearestNeighbor.second;
+				if(nearestNeighbor.first > configParam.euclideanValueThresold){
+					person = "unknown man";
+				}
+				#endif
+				#ifdef LOOP_SEARCH
+				std::pair<float, std::string>nearestNeighbor= configParam.serachCollectDataNameByloop(dataColletcion,
+																	detFeature, result[ii].faceAttri.gender);
+				person = nearestNeighbor.second;
+				if(nearestNeighbor.first < configParam.cosValueThresold){
+					person = "unknown man";
+				}
+				#endif
+				#ifdef LSH_SEARCH
+				lshgoal = result[ii].faceFeature.featureFace;
+				std::pair<float, std::string>nearestNeighbor = mylsh.query(lshgoal, metric, lshDataSet);
+				person = nearestNeighbor.second;
+				if(nearestNeighbor.first > configParam.euclideanValueThresold){
+					person = "unknown man";
+				}
+				#endif
+				#ifdef USE_KCF_TRACKING
+				detBoxInfo trackBoxInfo;
+				trackBoxInfo.detBox.xmin = result[ii].faceBox.xmin;
+				trackBoxInfo.detBox.xmax = result[ii].faceBox.xmax;
+				trackBoxInfo.detBox.ymin = result[ii].faceBox.ymin;
+				trackBoxInfo.detBox.ymax = result[ii].faceBox.ymax;
+				trackBoxInfo.name = person;
+				resutTrack.push_back(trackBoxInfo);
+				#endif
 				#if DEBUG
 				box detBox = result[ii].faceBox;
                 cv::rectangle( frame, cv::Point( detBox.xmin, detBox.ymin ), 
@@ -283,7 +265,7 @@ int main(int argc, char* argv[]){
 			FrameIdx = 0;
 		}
 		#else
-		std::vector<output> outs = faceInfernece.faceDetector(frame);
+		std::vector<output> outs = reidRecnet.faceDetector(frame);
 		DETECTIONS detections;
 		postprocess(outs,detections);
 		if(getRectsFeature(frame, detections)){

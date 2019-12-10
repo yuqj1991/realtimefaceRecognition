@@ -6,7 +6,7 @@
 #include <string>
 #include <stdlib.h>
 #include <assert.h>
-
+#include <cmath>
 namespace RESIDEO{
     typedef struct modelParameter_{
         std::string m_model_weight_;
@@ -49,6 +49,7 @@ namespace RESIDEO{
         int ymax;
     }box;
     typedef std::pair<float, box> output;
+    typedef std::pair<int, box> objectBox;
 
     typedef struct _faceAnalysis_result{
         box faceBox;
@@ -56,6 +57,11 @@ namespace RESIDEO{
         encodeFeature faceFeature;
         bool haveFeature;
     } faceAnalysisResult;
+
+    typedef struct _reidAnalysis_result{
+        box bodyBox;
+        encodeFeature reidfeature;
+    } reidAnalysisResult;
 
     typedef struct detBoxInfo_{
         box detBox;
@@ -100,6 +106,8 @@ namespace RESIDEO{
                         unsigned int method, int featureDim);
         std::pair<float, std::string>serachCollectDataNameByloop(FaceBase dataColletcion,
              encodeFeature feature, int gender);
+        std::pair<float, std::string>serachCollectDataNameByloop(vector_feature dataColletcion,
+             encodeFeature feature);
         std::string serachCollectDataNameBymapSet(mapFaceCollectDataSet dataTestSet,
              encodeFeature detFeature, int gender);
         mapFaceCollectDataSet getmapDatafaceBase(FaceBase &dataColletcion);
@@ -114,6 +122,7 @@ namespace RESIDEO{
         modelParameter detParam;
         modelParameter attriParam;
         modelParameter facenetParam;
+        modelParameter reidParam;
         int detMargin;
         float confidencethreold;
         std::vector < std::string > labelGender{"male", "female"};
