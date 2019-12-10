@@ -107,7 +107,7 @@ int main(int argc, char* argv[]){
 	faceAnalysis faceInfernece;
 	dataBase baseface(configParam.faceDir, configParam.facefeaturefile);
 
-#if 1
+#if 0
 	#ifdef USE_KCF_TRACKING
 	baseface.generateBaseFeature(faceInfernece);
 	#else
